@@ -1,0 +1,30 @@
+otwarcie pliku i wczytanie calego do jakiejs zmiennej ?
+
+funkcja do wczytanie naglowka - 8 bajtow
+i sprawdzenie czy naglowek jest git i wczytanie calego pliku do konca ?
+wejscie: file deskryptor
+
+funkcja do wczytania chunka ( w ramach klasy ? + zmienna do trzymania parsedLines, wtedy parsedLines odpowiednio ustaione przez funkcje) 
+wejcie: file deskryptor, wyjscie: para (nazwa chunka, data), ewentualnie sprawdzac sume hashujaca
+problem: kiedy skonczyc wczytywanie chunków, czy nie lepiej czytac chunkow ze zmiennej przechowujacej caly obraz,
+co gdy pojawią sie zwykle dane plikowe -> ignorujemy ?, co gdy pojawią sie jakies nieprawidlowe dane ? rzucamy blad ?
+funkcja nie moze modyfikowac zmiennej z calym obrazem
+
+
+switch nazwa_chunka:
+    chunk1:
+        funkcja parsujaca danego chunka, lub parsowanie wewnatrz
+
+    chunk2:
+
+    chunk3:
+
+
+PNGMeta - klasa agregator z setterami na kolejne dane, ktora zawiera pola
+zgodne z dostepnymi metadanymi - wada: tam gdzie nie bedzie w pliku danej metadanej pole bedzie puste
+lub
+zmienna slownikowa, ktora bedzie zawierala pary: Informacja o metadanie (string) : dane (string)
+
+
+gui: pyqt ?
+QPixmap - do wyswietlania obrazów ?
