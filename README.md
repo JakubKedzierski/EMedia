@@ -7,3 +7,8 @@ working with png file, encrypting algorithms
 * Jakub Kędzierski
 * Szymon Tomala
 
+## Testing
+test comand
+'''
+$ python3 -m pytest ./tests/TestPNGFileParser.py 
+'''
