@@ -1,7 +1,7 @@
-from project.PNGFileParser import PNGFileParser
+from project.PNGFileParser import PngFileParser
 
 def main():
-    png_parser = PNGFileParser()
+    png_parser = PngFileParser()
 
     # this png_parser variable should be used in gui class
     # sth like 

@@ -1,7 +1,7 @@
 """
 here we store png metada info like width, height of image, author, modification time etc
 """
-class PNGMetadata:
+class PngMetadata:
 
     def __init__(self):
         self.__width=None
