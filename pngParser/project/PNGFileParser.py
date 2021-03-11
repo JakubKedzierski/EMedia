@@ -46,8 +46,11 @@ class PngFileParser(FileParser):
 
     def __read_chunk(self,start_position:int):
         length_bytes=self.__file_data[start_position:start_position+4]
-        length=int(length_bytes[0],16)*16**3+int(length_bytes[1])*16**2+int(length_bytes[2])*16**1+int(length_bytes[3],16)
-        print(length)
+        length_bytes_joined = "".join(length_bytes)
+        length=int(length_bytes_joined,16)
+        
+        return length
+    
 
 
     def do_parsing(self):
