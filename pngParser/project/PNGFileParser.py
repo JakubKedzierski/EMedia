@@ -69,12 +69,10 @@ class PngFileParser(FileParser):
         while True:
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             start_position=end_position
-            
 
 
             if chunk_type == "IEND":
                 break
-            
             
             # jest jakis lepszy sposob, zeby zastapic te if, else na cos pokroju switcha ?
 
