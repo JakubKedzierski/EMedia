@@ -4,10 +4,10 @@ here we store png metada info like width, height of image, author, modification 
 class PngMetadata:
 
     def __init__(self):
-        self.__width=None
-        self.__height=None
-        self.__depth=None
-        self.__palete_of_colors=None
+        self.width=None
+        self.height=None
+        self.depth=None
+        self.palete_of_colors=None
         # etc, any other critical or ancillary chunk info
 
 
@@ -20,5 +20,5 @@ class PngMetadata:
         copyright:
         pairs -> str:str
         """
-        self.__textual_information_dict=None
+        self.textual_information_dict=None
         
