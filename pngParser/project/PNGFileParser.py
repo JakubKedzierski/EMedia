@@ -1,6 +1,7 @@
 import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
+import numpy as np
 
 
 """
@@ -46,7 +47,10 @@ class PngFileParser(FileParser):
     def read_chunk(self,start_position:int):
         length_bytes=self.__file_data[start_position:start_position+4]
         length_bytes_joined = "".join(length_bytes)
-        length=int(length_bytes_joined,16)
+        if length_bytes_joined != '':
+            length=int(length_bytes_joined,16)
+        else: 
+            length=0
         
         chunk_type_bytes=self.__file_data[start_position+4:start_position+8]
         chunk_type_bytes_joined = "".join(chunk_type_bytes)
@@ -59,31 +63,66 @@ class PngFileParser(FileParser):
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
     
 
+    def parse_plte_chunk(self,chunk_data_bytes):
+        for i in range(0,len(chunk_data_bytes)):
+            chunk_data_bytes[i] = int(chunk_data_bytes[i],16)
+        
+        chunk_data = np.array(chunk_data_bytes)
+        chunk_data = np.reshape(chunk_data,(-1,3))
+        self.meta_data.palette_entires=chunk_data
+    
+    def parse_text_chunk(self,chunk_data_bytes):
+        
+        keyword=[]
+        value=[]
+        null_value_found=False
+        for data in chunk_data_bytes:
+            if data == '00':
+                null_value_found=True
+            
+            if null_value_found == False:
+                keyword.append(data)
+            
+            if null_value_found == True:
+                if data != '00':
+                    value.append(data)
+        
+        keyword = ''.join(keyword)
+        value = ''.join(value)
+        keyword = bytes.fromhex(keyword).decode()
+        value = bytes.fromhex(value).decode()
+        
+        self.meta_data.textual_information_dict[keyword]=value 
+
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
             raise ValueError("PNG file has not proper file header")
 
         start_position=8
-        
+
         while True:
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             start_position=end_position
-
-
+            
+            #critical chunks:
+    
             if chunk_type == "IEND":
                 break
-            
-            # jest jakis lepszy sposob, zeby zastapic te if, else na cos pokroju switcha ?
 
             if chunk_type == "IHDR":
                 pass
 
             elif chunk_type == "PLTE":
-                pass
+                self.parse_plte_chunk(chunk_data_bytes)
 
             elif chunk_type == "IDAT":
                 pass
+            
+            #and ancillary chunks:
+            
+            elif chunk_type == "tEXt":
+                self.parse_text_chunk(chunk_data_bytes)
 
 
     

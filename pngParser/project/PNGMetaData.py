@@ -8,6 +8,7 @@ class PngMetadata:
         self.height=None
         self.depth=None
         self.palete_of_colors=None
+        self.palette_entires=None
         # etc, any other critical or ancillary chunk info
 
 
@@ -20,5 +21,5 @@ class PngMetadata:
         copyright:
         pairs -> str:str
         """
-        self.textual_information_dict=None
+        self.textual_information_dict={}
         
