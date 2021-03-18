@@ -52,16 +52,37 @@ class PngFileParser(FileParser):
         else: 
             length=0
         
-        chunk_type_bytes=self.__file_data[start_position+4:start_position+8]
-        chunk_type_bytes_joined = "".join(chunk_type_bytes)
-        chunk_type = bytes.fromhex(chunk_type_bytes_joined).decode()
+        chunk_type_bytes=self.__file_data[start_position+4:start_position+8] 
+        chunk_type_bytes_joined = "".join(chunk_type_bytes) 
+        chunk_type = bytes.fromhex(chunk_type_bytes_joined).decode() 
 
         chunk_data_bytes_in_a_list = self.__file_data[start_position+8:start_position+8+length]
-        end_position=start_position+8+length+4 # data start + data end + CRC
+        end_position=start_position+8+length+4 # data start + data end + CRCz
 
         return length,chunk_type,chunk_data_bytes_in_a_list,end_position
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
     
+    # funkcja służąca do odczytu danych z chunka IHDR - headera
+    def read_ihdr_chunk(self, start_position:int):
+        # lista pierwszych 4 chunków zawierających informację o wysokości pliku
+        height_list = self.__file_data[start_position:start_position+4]
+        #lista kolejnych 4 chunków zawierających informację o szerokości pliku
+        width_list = self.__file_data[start_position+4:start_position+8] 
+        #lista ostatnich 5 chunków zawierających pozostałe informacje
+        ihdr_list = self.__file_data[start_position+8:start_position+13]
+
+        # łączenie list w jeden string
+        height_list_joined = "".join(height_list)
+        width_list_joined = "".join(width_list)
+
+        # odkodowanie danych i przypisanie ich do obiektu klasy PngMetadata()
+        self.__meta_data.height = int(height_list_joined, 16)
+        self.__meta_data.width = int(width_list_joined, 16)
+        self.__meta_data.depth = int(ihdr_list[0], 16)
+        self.__meta_data.color_type = int(ihdr_list[1], 16)
+        self.__meta_data.compression_method = int(ihdr_list[2], 16)
+        self.__meta_data.filter_method = int(ihdr_list[3], 16)
+        self.__meta_data.interlace_method = int(ihdr_list[4], 16)
 
     def parse_plte_chunk(self,chunk_data_bytes):
         for i in range(0,len(chunk_data_bytes)):
@@ -111,7 +132,7 @@ class PngFileParser(FileParser):
                 break
 
             if chunk_type == "IHDR":
-                pass
+                self.read_ihdr_chunk(start_position)
 
             elif chunk_type == "PLTE":
                 self.parse_plte_chunk(chunk_data_bytes)
