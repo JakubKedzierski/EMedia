@@ -12,7 +12,7 @@ class PngFileParser(FileParser):
 
     def __init__(self):
         self.__file_data=[]  #whole png file with headers and each chunk, data is in hex notation
-        self.__meta_data=PngMetadata()   # png file metada
+        self._meta_data=PngMetadata()   # png file metada
 
     @property
     def file_data(self):
@@ -20,7 +20,7 @@ class PngFileParser(FileParser):
 
     @property
     def meta_data(self):
-        return self.__meta_data
+        return self._meta_data
 
 
     def readFile(self,file_name:str):
@@ -77,13 +77,13 @@ class PngFileParser(FileParser):
         width_list_joined = "".join(width_list)
 
         # odkodowanie danych i przypisanie ich do obiektu klasy PngMetadata()
-        self.__meta_data.height = int(height_list_joined, 16)
-        self.__meta_data.width = int(width_list_joined, 16)
-        self.__meta_data.depth = int(ihdr_list[0], 16)
-        self.__meta_data.color_type = int(ihdr_list[1], 16)
-        self.__meta_data.compression_method = int(ihdr_list[2], 16)
-        self.__meta_data.filter_method = int(ihdr_list[3], 16)
-        self.__meta_data.interlace_method = int(ihdr_list[4], 16)
+        self._meta_data.height = int(height_list_joined, 16)
+        self._meta_data.width = int(width_list_joined, 16)
+        self._meta_data.depth = int(ihdr_list[0], 16)
+        self._meta_data.color_type = int(ihdr_list[1], 16)
+        self._meta_data.compression_method = int(ihdr_list[2], 16)
+        self._meta_data.filter_method = int(ihdr_list[3], 16)
+        self._meta_data.interlace_method = int(ihdr_list[4], 16)
 
     def parse_plte_chunk(self,chunk_data_bytes):
         for i in range(0,len(chunk_data_bytes)):
@@ -124,7 +124,58 @@ class PngFileParser(FileParser):
         minute = int("".join(chunk_data[5:6]),16)
         second = int("".join(chunk_data[6:7]),16)
         time_of_modyfication = datetime.datetime(year=year,month=month,day=day,hour=hour,minute=minute,second=second)
-        self.__meta_data.time_of_last_edit = time_of_modyfication
+        self._meta_data.time_of_last_edit = time_of_modyfication
+
+    def parse_international_text_info(self,chunk_data):
+
+        keyword = []
+        iter=0
+        for data in chunk_data:
+            iter+=1
+            if data == '00':
+                break;
+            keyword.append(data)
+
+        keyword = ''.join(keyword)
+        keyword = bytes.fromhex(keyword).decode()
+        compress_flag = int(chunk_data[iter],16)
+        compress_method = int(chunk_data[iter+1],16)
+        chunk_data=chunk_data[iter+2:len(chunk_data)]
+
+        iter=0
+        lang_tag=[]
+        for data in chunk_data:
+            iter+=1
+            if data == '00':
+                break;
+            lang_tag.append(data)
+
+        lang_tag = "".join(lang_tag)
+        lang_tag = bytes.fromhex(lang_tag).decode()
+
+        chunk_data = chunk_data[iter:len(chunk_data)]
+        iter=0
+        translated_key=[]
+        for data in chunk_data:
+            iter+=1
+            if data == '00':
+                break;
+            translated_key.append(data)
+
+        translated_key = ''.join(translated_key)
+        translated_key = bytes.fromhex(translated_key).decode()
+
+        text = chunk_data[iter:len(chunk_data)]
+        if compress_flag == 0:
+            text = ''.join(text)
+            text = bytes.fromhex(text).decode()
+        else:
+            pass
+
+        text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
+        self._meta_data.textual_information_dict[keyword] = text_data
+
+
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
@@ -146,15 +197,17 @@ class PngFileParser(FileParser):
 
             elif chunk_type == "PLTE":
                 self.parse_plte_chunk(chunk_data_bytes)
-
-            elif chunk_type == "tIME":
-                self.parse_time_chunk(chunk_data_bytes)
             
             #and ancillary chunks:
             
             elif chunk_type == "tEXt":
                 self.parse_text_chunk(chunk_data_bytes)
 
+            elif chunk_type == "tIME":
+                self.parse_time_chunk(chunk_data_bytes)
+
+            elif chunk_type ==  "iTXt":
+                self.parse_international_text_info(chunk_data_bytes)
 
     
     def saveFile(self,new_file_name:str):

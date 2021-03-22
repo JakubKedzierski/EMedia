@@ -5,6 +5,7 @@ def main():
     png_parser.readFile("lots_of_chunks.png")
     png_parser.do_parsing()
     png_parser.saveFile("after_test.png")
+    png_parser.meta_data.show_data()
 
     # this png_parser variable should be used in gui class
     # sth like 
