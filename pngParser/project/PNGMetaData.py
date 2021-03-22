@@ -12,6 +12,7 @@ class PngMetadata:
         self.compression_method=None
         self.filter_method=None
         self.interlace_method=None
+        self.time_of_last_edit=None
 
         # PLTE chunks
         self.palete_of_colors=None

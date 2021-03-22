@@ -1,6 +1,7 @@
 import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
+import datetime
 import numpy as np
 
 
@@ -115,6 +116,15 @@ class PngFileParser(FileParser):
         
         self.meta_data.textual_information_dict[keyword]=value 
 
+    def parse_time_chunk(self,chunk_data):
+        year = int("".join(chunk_data[0:2]),16)
+        month = int("".join(chunk_data[2:3]),16)
+        day = int("".join(chunk_data[3:4]),16)
+        hour = int("".join(chunk_data[4:5]),16)
+        minute = int("".join(chunk_data[5:6]),16)
+        second = int("".join(chunk_data[6:7]),16)
+        time_of_modyfication = datetime.datetime(year=year,month=month,day=day,hour=hour,minute=minute,second=second)
+        self.__meta_data.time_of_last_edit = time_of_modyfication
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
@@ -125,7 +135,7 @@ class PngFileParser(FileParser):
         while True:
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             start_position=end_position
-            
+
             #critical chunks:
     
             if chunk_type == "IEND":
@@ -137,8 +147,8 @@ class PngFileParser(FileParser):
             elif chunk_type == "PLTE":
                 self.parse_plte_chunk(chunk_data_bytes)
 
-            elif chunk_type == "IDAT":
-                pass
+            elif chunk_type == "tIME":
+                self.parse_time_chunk(chunk_data_bytes)
             
             #and ancillary chunks:
             
