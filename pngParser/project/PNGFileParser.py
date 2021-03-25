@@ -3,6 +3,8 @@ from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
 import datetime
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as img
 
 
 """
@@ -64,13 +66,10 @@ class PngFileParser(FileParser):
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
     
     # funkcja służąca do odczytu danych z chunka IHDR - headera
-    def read_ihdr_chunk(self, start_position:int):
-        # lista pierwszych 4 chunków zawierających informację o wysokości pliku
-        height_list = self.__file_data[start_position:start_position+4]
-        #lista kolejnych 4 chunków zawierających informację o szerokości pliku
-        width_list = self.__file_data[start_position+4:start_position+8] 
-        #lista ostatnich 5 chunków zawierających pozostałe informacje
-        ihdr_list = self.__file_data[start_position+8:start_position+13]
+    def read_ihdr_chunk(self):
+        height_list = self.__file_data[16:20]
+        width_list = self.__file_data[20:24] 
+        ihdr_list = self.__file_data[24:29]
 
         # łączenie list w jeden string
         height_list_joined = "".join(height_list)
@@ -193,7 +192,7 @@ class PngFileParser(FileParser):
                 break
 
             if chunk_type == "IHDR":
-                self.read_ihdr_chunk(start_position)
+                self.read_ihdr_chunk()
 
             elif chunk_type == "PLTE":
                 self.parse_plte_chunk(chunk_data_bytes)
@@ -214,4 +213,11 @@ class PngFileParser(FileParser):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
+
+    # funkcja wyświetlająca obrazek 
+    def displayImage(self,image_path):
+        im_data = img.imread(image_path)
+        plt.imshow(im_data)
+        plt.show()
+
     
