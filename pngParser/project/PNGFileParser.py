@@ -66,10 +66,10 @@ class PngFileParser(FileParser):
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
     
     # funkcja służąca do odczytu danych z chunka IHDR - headera
-    def read_ihdr_chunk(self):
-        height_list = self.__file_data[16:20]
-        width_list = self.__file_data[20:24] 
-        ihdr_list = self.__file_data[24:29]
+    def parse_ihdr_chunk(self, chunk_data_bytes):
+        height_list = chunk_data_bytes[0:4]
+        width_list = chunk_data_bytes[4:8] 
+        ihdr_list = chunk_data_bytes[8:13]
 
         # łączenie list w jeden string
         height_list_joined = "".join(height_list)
@@ -192,7 +192,7 @@ class PngFileParser(FileParser):
                 break
 
             if chunk_type == "IHDR":
-                self.read_ihdr_chunk()
+                self.parse_ihdr_chunk(chunk_data_bytes)
 
             elif chunk_type == "PLTE":
                 self.parse_plte_chunk(chunk_data_bytes)
