@@ -2,6 +2,7 @@ import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
 import datetime
+import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
@@ -215,9 +216,22 @@ class PngFileParser(FileParser):
                 file.write(bytes.fromhex(byte))
 
     # funkcja wyświetlająca obrazek 
-    def displayImage(self,image_path):
-        im_data = img.imread(image_path)
-        plt.imshow(im_data)
-        plt.show()
+    def display_image(self,image_path):
+        im_data = cv.imread(image_path)
+        cv.namedWindow('Image',cv.WINDOW_NORMAL)
+        cv.imshow('Image',im_data)
+        cv.waitKey(0)
+
+    def fast_fourier_transformation(self, image_path):
+        im_data = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+        f = np.fft.fft2(im_data)
+        f_shifted = np.fft.fftshift(f)
+    
+        magnitude = 20*np.log(np.abs(f_shifted))
+        magnitude = np.asarray(magnitude, dtype=np.uint8)
+
+        cv.namedWindow('magnitude', cv.WINDOW_NORMAL)
+        cv.imshow('magnitude', magnitude)
+        cv.waitKey(0)
 
     
