@@ -15,6 +15,7 @@ class PngFileParser(FileParser):
     def __init__(self):
         self.__file_data=[]  #whole png file with headers and each chunk, data is in hex notation
         self._meta_data=PngMetadata()   # png file metada
+        self._chunk_positions=[]
 
     @property
     def file_data(self):
@@ -170,11 +171,18 @@ class PngFileParser(FileParser):
             text = bytes.fromhex(text).decode()
         else:
             pass
+            # TO DO !
+
+
 
         text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
         self._meta_data.textual_information_dict[keyword] = text_data
 
-
+    def anonimize(self):
+        for chunk in self._chunk_positions:
+            if chunk[2][0].islower():
+                for i in range(chunk[0], chunk[1]):
+                    self.__file_data[i] = ''
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
@@ -184,8 +192,9 @@ class PngFileParser(FileParser):
 
         while True:
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
+            self._chunk_positions.append((start_position,end_position,chunk_type))
             start_position=end_position
-
+            print(chunk_type)
             #critical chunks:
     
             if chunk_type == "IEND":
@@ -207,6 +216,7 @@ class PngFileParser(FileParser):
 
             elif chunk_type ==  "iTXt":
                 self.parse_international_text_info(chunk_data_bytes)
+
 
     
     def saveFile(self,new_file_name:str):
