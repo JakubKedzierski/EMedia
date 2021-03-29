@@ -181,8 +181,8 @@ class PngFileParser(FileParser):
     def anonimize(self):
         for chunk in self._chunk_positions:
             if chunk[2][0].islower():
-                for i in range(chunk[0], chunk[1]):
-                    self.__file_data[i] = ''
+                for i in range(chunk[0]+8, chunk[1]):
+                    self.__file_data[i] = '00'
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
