@@ -4,8 +4,6 @@ from project.PNGMetaData import PngMetadata
 import datetime
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as img
 import zlib
 
 """
@@ -174,6 +172,7 @@ class PngFileParser(FileParser):
             text = ''.join(text)
             text = bytes.fromhex(text)
             text = zlib.decompress(text)
+            text = str(text, 'utf-8')
 
         text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
         self._meta_data.textual_information_dict[keyword] = text_data
