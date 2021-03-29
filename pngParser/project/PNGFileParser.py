@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
-
+import zlib
 
 """
 class read, parse, save png file
@@ -170,10 +170,9 @@ class PngFileParser(FileParser):
             text = ''.join(text)
             text = bytes.fromhex(text).decode()
         else:
-            pass
-            # TO DO !
-
-
+            text = ''.join(text)
+            text = bytes.fromhex(text)
+            text = zlib.decompress(text)
 
         text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
         self._meta_data.textual_information_dict[keyword] = text_data
