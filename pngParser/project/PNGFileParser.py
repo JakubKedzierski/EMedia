@@ -93,6 +93,11 @@ class PngFileParser(FileParser):
         chunk_data = np.array(chunk_data_bytes)
         chunk_data = np.reshape(chunk_data,(-1,3))
         self.meta_data.palette_entires=chunk_data
+
+    def parse_exif_chunk(self, chunk_data_bytes):
+        #for i in range(0, len(chunk_data_bytes)):
+        #    print(chunk_data_bytes[i])
+        pass
     
     def parse_text_chunk(self,chunk_data_bytes):
         
@@ -178,6 +183,19 @@ class PngFileParser(FileParser):
         text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
         self._meta_data.textual_information_dict[keyword] = text_data
 
+    def parse_gama_chunk(self, chunk_data_bytes):
+        gama = ''.join(chunk_data_bytes)
+        gamma = int(gama, 16)/100000
+        self.meta_data.gamma_value = gamma
+
+    def parse_physical_chunk(self, chunk_data_bytes):
+        pixels_per_X = int(''.join(chunk_data_bytes[0:4]), 16)
+        pixels_per_Y = int(''.join(chunk_data_bytes[4:8]), 16)
+        unit = int(chunk_data_bytes[8])
+        self.meta_data.pixels_per_x = pixels_per_X
+        self.meta_data.pixels_per_y = pixels_per_Y
+        self.meta_data.phys_unit = unit
+
     def anonimize(self):
         for chunk in self._chunk_positions:
             if chunk[2][0].islower():
@@ -207,6 +225,9 @@ class PngFileParser(FileParser):
                 self.parse_plte_chunk(chunk_data_bytes)
             
             #and ancillary chunks:
+
+            elif chunk_type =="eXIf":
+                self.parse_exif_chunk(chunk_data_bytes)
             
             elif chunk_type == "tEXt":
                 self.parse_text_chunk(chunk_data_bytes)
@@ -216,6 +237,12 @@ class PngFileParser(FileParser):
 
             elif chunk_type ==  "iTXt":
                 self.parse_international_text_info(chunk_data_bytes)
+
+            elif chunk_type == "gAMA":
+                self.parse_gama_chunk(chunk_data_bytes)
+
+            elif chunk_type == "pHYs":
+                self.parse_physical_chunk(chunk_data_bytes)
 
 
     
