@@ -267,8 +267,13 @@ class PngFileParser(FileParser):
         magnitude = 255*magnitude/np.max(magnitude)
         magnitude = np.asarray(magnitude, dtype=np.uint8)
 
+        phase = np.angle(f_shifted)
+
         cv.namedWindow('magnitude', cv.WINDOW_NORMAL)
         cv.imshow('magnitude', magnitude)
+
+        cv.namedWindow('phase', cv.WINDOW_NORMAL)
+        cv.imshow('phase', phase)
         cv.waitKey(0)
 
     
