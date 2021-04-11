@@ -264,6 +264,7 @@ class PngFileParser(FileParser):
         f_shifted = np.fft.fftshift(f)
     
         magnitude = 20*np.log(np.abs(f_shifted))
+        magnitude = 255*magnitude/np.max(magnitude)
         magnitude = np.asarray(magnitude, dtype=np.uint8)
 
         cv.namedWindow('magnitude', cv.WINDOW_NORMAL)
