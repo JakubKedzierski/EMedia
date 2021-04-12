@@ -58,6 +58,7 @@ class PngMetadata:
 
         if self.phys_unit is not None:
             print('\n\npHYs CHUNK:')
+            print('The pHYs chunk specifies the intended pixel size or aspect ratio for display of the image')
             self.physical_explanation()
 
         if self.textual_information_dict is not None:
@@ -93,6 +94,3 @@ class PngMetadata:
         pairs -> str:str
         """
         self.textual_information_dict={}
-
-
-        

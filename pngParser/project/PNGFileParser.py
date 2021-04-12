@@ -2,22 +2,18 @@ import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
 import datetime
-import cv2 as cv
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 import zlib
 from xml.etree import cElementTree as ElementTree
 
-"""
-class read, parse, save png file
-"""
+
 class PngFileParser(FileParser):
 
     def __init__(self):
-        self.__file_data=[]  #whole png file with headers and each chunk, data is in hex notation
-        self._meta_data=PngMetadata()   # png file metada
-        self._chunk_positions=[]
+        self.__file_data = []  #whole png file with headers and each chunk, data is in hex notation
+        self._meta_data = PngMetadata()   # png file metada
+        self._chunk_positions = []
 
     @property
     def file_data(self):
@@ -40,9 +36,9 @@ class PngFileParser(FileParser):
             raise FileNotFoundError
     
     def check_if_file_header_is_proper(self):
-        png_header=['89','50','4e','47','0d','0a','1a','0a']
+        png_header=['89', '50', '4e', '47', '0d', '0a', '1a', '0a']
         for i in range(0,8):
-            if(png_header[i] != self.__file_data[i]):
+            if png_header[i] != self.__file_data[i]:
                 return False
         return True
 
@@ -63,7 +59,7 @@ class PngFileParser(FileParser):
         chunk_type = bytes.fromhex(chunk_type_bytes_joined).decode() 
 
         chunk_data_bytes_in_a_list = self.__file_data[start_position+8:start_position+8+length]
-        end_position=start_position+8+length+4 # data start + data end + CRCz
+        end_position=start_position+8+length+4 # data start + data end + CRC
 
         return length,chunk_type,chunk_data_bytes_in_a_list,end_position
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
@@ -141,7 +137,12 @@ class PngFileParser(FileParser):
         hour = int("".join(chunk_data[4:5]),16)
         minute = int("".join(chunk_data[5:6]),16)
         second = int("".join(chunk_data[6:7]),16)
-        time_of_modyfication = datetime.datetime(year=year,month=month,day=day,hour=hour,minute=minute,second=second)
+        try:
+            time_of_modyfication = datetime.datetime(year=year,month=month,day=day,hour=hour,minute=minute,second=second)
+        except ValueError:
+            print('Invalid tIMe data')
+            return
+
         self._meta_data.time_of_last_edit = time_of_modyfication
 
     def parse_international_text_info(self,chunk_data):
@@ -224,11 +225,6 @@ class PngFileParser(FileParser):
         self.meta_data.pixels_per_y = pixels_per_Y
         self.meta_data.phys_unit = unit
 
-    def anonimize(self):
-        for chunk in self._chunk_positions:
-            if chunk[2][0].islower():
-                for i in range(chunk[0]+8, chunk[1]):
-                    self.__file_data[i] = '00'
 
     def do_parsing(self):
         if self.check_if_file_header_is_proper() is False:
@@ -238,7 +234,7 @@ class PngFileParser(FileParser):
 
         while True:
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
-            self._chunk_positions.append((start_position,end_position,chunk_type))
+            self._chunk_positions.append((start_position, end_position, chunk_type))
             start_position=end_position
 
             #critical chunks:
@@ -272,35 +268,23 @@ class PngFileParser(FileParser):
             elif chunk_type == "pHYs":
                 self.parse_physical_chunk(chunk_data_bytes)
 
+    def save_with_anonimization(self,new_file_name:str):
+        png_header = ['89', '50', '4e', '47', '0d', '0a', '1a', '0a']
+        with open("img/" + new_file_name, 'wb') as file:
+            for header_byte in png_header:
+                file.write(bytes.fromhex(header_byte))
+            for chunk in self._chunk_positions:
+                start_position = chunk[0]
+                if not chunk[2][0].islower():
+                    for i in range(start_position, chunk[1]):
+                        file.write(bytes.fromhex(self.__file_data[i]))
+                else:
+                    for i in range(start_position, start_position+8):
+                        file.write(bytes.fromhex(self.__file_data[i]))
+                    for i in range(start_position+8, chunk[1]):
+                        file.write(bytes.fromhex('00'))
 
     def saveFile(self,new_file_name:str):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
-
-    # funkcja wyświetlająca obrazek 
-    def display_image(self,image_path):
-        im_data = cv.imread(image_path)
-        cv.namedWindow('Image',cv.WINDOW_NORMAL)
-        cv.imshow('Image',im_data)
-        cv.waitKey(0)
-
-    def fast_fourier_transformation(self, image_path):
-        im_data = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
-        f = np.fft.fft2(im_data)
-        f_shifted = np.fft.fftshift(f)
-    
-        magnitude = 20*np.log(np.abs(f_shifted))
-        magnitude = 255*magnitude/np.max(magnitude)
-        magnitude = np.asarray(magnitude, dtype=np.uint8)
-
-        phase = np.angle(f_shifted)
-
-        cv.namedWindow('magnitude', cv.WINDOW_NORMAL)
-        cv.imshow('magnitude', magnitude)
-
-        cv.namedWindow('phase', cv.WINDOW_NORMAL)
-        cv.imshow('phase', phase)
-        cv.waitKey(0)
-
-    
