@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as img
 import zlib
 from xml.etree import cElementTree as ElementTree
+import numpy as np
 
 
 class PngFileParser(FileParser):
@@ -128,7 +129,36 @@ class PngFileParser(FileParser):
         keyword = bytes.fromhex(keyword).decode()
         value = bytes.fromhex(value).decode()
         
-        self.meta_data.textual_information_dict[keyword]=value 
+        self.meta_data.textual_information_dict[keyword]=value
+
+    def parse_ztext_chunk(self, chunk_data_bytes):
+        keyword = []
+        value = []
+        null_value_found = False
+        for data in chunk_data_bytes:
+            if data == '00' and not null_value_found:
+                null_value_found = True
+                continue
+
+            if not null_value_found:
+                keyword.append(data)
+
+            if null_value_found:
+                value.append(data)
+
+        if value[0] == '00':
+            value = ''.join(value[1:])
+            value = bytes.fromhex(value)
+            value = zlib.decompress(value)
+            value = str(value, 'utf-8')
+        else:
+            print(" Unknown compress method in zTXt chunk")
+            return
+
+        keyword = ''.join(keyword)
+        keyword = bytes.fromhex(keyword).decode()
+
+        self.meta_data.textual_information_dict[keyword] = value
 
     def parse_time_chunk(self,chunk_data):
         year = int("".join(chunk_data[0:2]),16)
@@ -236,7 +266,7 @@ class PngFileParser(FileParser):
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             self._chunk_positions.append((start_position, end_position, chunk_type))
             start_position=end_position
-
+            #print(chunk_type)
             #critical chunks:
     
             if chunk_type == "IEND":
@@ -250,11 +280,14 @@ class PngFileParser(FileParser):
             
             #and ancillary chunks:
 
-            elif chunk_type =="eXIf":
+            elif chunk_type == "eXIf":
                 self.parse_exif_chunk(chunk_data_bytes)
 
             elif chunk_type == "tEXt":
                 self.parse_text_chunk(chunk_data_bytes)
+
+            elif chunk_type == 'zTXt':
+                self.parse_ztext_chunk(chunk_data_bytes)
 
             elif chunk_type == "tIME":
                 self.parse_time_chunk(chunk_data_bytes)

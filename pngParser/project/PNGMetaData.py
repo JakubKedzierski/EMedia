@@ -21,7 +21,7 @@ class PngMetadata:
 
     def interlace_method_explanation(self):
         if self.interlace_method == 0:
-            return 'No interlace'
+            return 'No interlace. Pixels are stored sequentially from left to right.'
         elif self.interlace_method == 1:
             return 'Interlace'
         else:
