@@ -4,6 +4,8 @@ from project.PNGMetaData import PngMetadata
 import datetime
 import cv2 as cv
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as img
 import zlib
 from xml.etree import cElementTree as ElementTree
 
@@ -92,7 +94,12 @@ class PngFileParser(FileParser):
         chunk_data = np.array(chunk_data_bytes)
         chunk_data = np.reshape(chunk_data,(-1,3))
         self.meta_data.palette_entires=chunk_data
-    
+
+    def parse_exif_chunk(self, chunk_data_bytes):
+        #for i in range(0, len(chunk_data_bytes)):
+        #    print(chunk_data_bytes[i])
+        pass
+
     def parse_text_chunk(self,chunk_data_bytes):
         
         keyword=[]
@@ -192,6 +199,19 @@ class PngFileParser(FileParser):
 
         return xmp_information
 
+    def parse_gama_chunk(self, chunk_data_bytes):
+        gama = ''.join(chunk_data_bytes)
+        gamma = int(gama, 16)/100000
+        self.meta_data.gamma_value = gamma
+
+    def parse_physical_chunk(self, chunk_data_bytes):
+        pixels_per_X = int(''.join(chunk_data_bytes[0:4]), 16)
+        pixels_per_Y = int(''.join(chunk_data_bytes[4:8]), 16)
+        unit = int(chunk_data_bytes[8])
+        self.meta_data.pixels_per_x = pixels_per_X
+        self.meta_data.pixels_per_y = pixels_per_Y
+        self.meta_data.phys_unit = unit
+
     def anonimize(self):
         for chunk in self._chunk_positions:
             if chunk[2][0].islower():
@@ -221,7 +241,10 @@ class PngFileParser(FileParser):
                 self.parse_plte_chunk(chunk_data_bytes)
             
             #and ancillary chunks:
-            
+
+            elif chunk_type =="eXIf":
+                self.parse_exif_chunk(chunk_data_bytes)
+
             elif chunk_type == "tEXt":
                 self.parse_text_chunk(chunk_data_bytes)
 
@@ -230,6 +253,12 @@ class PngFileParser(FileParser):
 
             elif chunk_type ==  "iTXt":
                 self.parse_international_text_info(chunk_data_bytes)
+
+            elif chunk_type == "gAMA":
+                self.parse_gama_chunk(chunk_data_bytes)
+
+            elif chunk_type == "pHYs":
+                self.parse_physical_chunk(chunk_data_bytes)
 
 
     def saveFile(self,new_file_name:str):
@@ -250,10 +279,16 @@ class PngFileParser(FileParser):
         f_shifted = np.fft.fftshift(f)
     
         magnitude = 20*np.log(np.abs(f_shifted))
+        magnitude = 255*magnitude/np.max(magnitude)
         magnitude = np.asarray(magnitude, dtype=np.uint8)
+
+        phase = np.angle(f_shifted)
 
         cv.namedWindow('magnitude', cv.WINDOW_NORMAL)
         cv.imshow('magnitude', magnitude)
+
+        cv.namedWindow('phase', cv.WINDOW_NORMAL)
+        cv.imshow('phase', phase)
         cv.waitKey(0)
 
     

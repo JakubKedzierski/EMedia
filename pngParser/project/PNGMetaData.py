@@ -25,12 +25,24 @@ class PngMetadata:
         if(number != 0 and number != 1):
             print('Invalid interlace data')
 
+    def physical_explanation(self, phys_unit, pixels_per_x, pixels_per_y):
+        if(phys_unit == 1):
+            print("Pixels per one meter, X axis: ", pixels_per_x)
+            print("Pixels per one meter, Y axis: ", pixels_per_y)
+        if(phys_unit == 0):
+            print("Unit is unknown")
+            print("Pixels per one unit, X axis: ", pixels_per_x)
+            print("Pixels per one unit, Y axis: ", pixels_per_y)
+
+
     def show_data(self):
         print("Width:",self.width,"px")
         print("Height:",self.height,"px")
+        self.physical_explanation(self.phys_unit, self.pixels_per_x, self.pixels_per_y)
         print("Depht:",self.depth)
-        #print("Color Type", self.color_type)
+        print("Color Type", self.color_type)
         self.color_type_explanation(self.color_type)
+        print("Gamma value: ", self.gamma_value)
         print("Compression method",self.compression_method)
         print("Filter method:",self.filter_method)
         #print("Interlace method",self.interlace_method)
@@ -53,6 +65,10 @@ class PngMetadata:
         self.filter_method=None
         self.interlace_method=None
         self.time_of_last_edit=None
+        self.gamma_value=None
+        self.pixels_per_x=None
+        self.pixels_per_y=None
+        self.phys_unit=None
 
         # PLTE chunks
         self.palete_of_colors=None
