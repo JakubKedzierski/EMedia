@@ -103,6 +103,52 @@ class PngFileParser(FileParser):
         chunk_data = np.reshape(chunk_data,(-1,3))
         self.meta_data.palette_entires = chunk_data
 
+    def __parse_ifd_directory(self, offset, chunk_data_bytes):
+        bytes_per_entry = 12
+        crop_data = chunk_data_bytes[offset:]
+
+        number_of_directory_entry = crop_data[0:2]
+        number_of_directory_entry = "".join(number_of_directory_entry)
+        number_of_directory_entry = int(number_of_directory_entry, 16)
+
+        crop_data=crop_data[2:]
+
+        dir_entry = [[0] * bytes_per_entry] * number_of_directory_entry
+        for i in range(0, number_of_directory_entry):
+            for j in range(0,bytes_per_entry):
+                dir_entry[i][j] = crop_data[i*bytes_per_entry+j]
+
+        end_of_data = number_of_directory_entry * bytes_per_entry
+        offset_to_next_ifd = crop_data[end_of_data : end_of_data + 4]
+        offset_to_next_ifd = "".join(offset_to_next_ifd)
+        offset_to_next_ifd = int(offset_to_next_ifd, 16)
+
+        return offset_to_next_ifd, dir_entry
+
+    def __parse_data_format_entry(self, data_entry):
+        tag_number = "".join(data_entry[0:2])
+        data_format = "".join(data_entry[2:4])
+        data_format = int(data_format,16)
+        number_of_components = "".join(data_entry[4:8])
+        number_of_components = int(number_of_components,16)
+
+        bytes_per_component = 1
+        if data_format == 3 or data_format == 8:
+            bytes_per_component = 2
+        elif data_format == 4 or data_format == 9 or data_format == 11:
+            bytes_per_component = 4
+        elif data_format == 5 or data_format == 10 or data_format == 12:
+            bytes_per_component = 8
+
+        is_data = True
+        if bytes_per_component * number_of_components >= 4:
+            is_data = False
+
+        data_or_offset = "".join(data_entry[8:])
+
+        return tag_number, data_or_offset, is_data
+
+
     def parse_exif_chunk(self, chunk_data_bytes):
         exif_info = ''
         bit_order = chunk_data_bytes[0:2]
@@ -121,13 +167,17 @@ class PngFileParser(FileParser):
             exif_info += "Exif has unknown tag mark \n"
             return
 
-        offset_to_first_ifd = chunk_data_bytes[4:8]
-        offset_to_first_ifd = "".join(offset_to_first_ifd)
-        offset_to_first_ifd = int(offset_to_first_ifd, 16)
+        offset_to_next_ifd = chunk_data_bytes[4:8]
+        offset_to_next_ifd = "".join(offset_to_next_ifd)
+        offset_to_next_ifd = int(offset_to_next_ifd, 16)
 
-        number_of_directory_entry = chunk_data_bytes[offset_to_first_ifd:offset_to_first_ifd+2]
-        number_of_directory_entry = "".join(number_of_directory_entry)
-        number_of_directory_entry = int(number_of_directory_entry, 16)
+        while offset_to_next_ifd != 0:
+            offset_to_next_ifd, dir_entry = self.__parse_ifd_directory(offset_to_next_ifd, chunk_data_bytes)
+
+            for entry in dir_entry:
+                tag_number, data_or_offset, is_data = self.__parse_data_format_entry(entry)
+                print(data_or_offset)
+
 
         self._meta_data.exif_info = exif_info
 
@@ -344,3 +394,4 @@ class PngFileParser(FileParser):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
+
