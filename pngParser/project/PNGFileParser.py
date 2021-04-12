@@ -153,7 +153,6 @@ class PngFileParser(FileParser):
 
         return tag_number, data_or_offset, is_data
 
-
     def parse_exif_chunk(self, chunk_data_bytes):
         exif_info = ''
         bit_order = chunk_data_bytes[0:2]
@@ -181,7 +180,7 @@ class PngFileParser(FileParser):
 
             for entry in dir_entry:
                 tag_number, data_or_offset, is_data = self.__parse_data_format_entry(entry)
-                print(data_or_offset)
+                exif_info += "tag number:" + str(tag_number) + "\n"
 
 
         self._meta_data.exif_info = exif_info
