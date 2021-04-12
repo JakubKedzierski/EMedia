@@ -68,23 +68,34 @@ class PngFileParser(FileParser):
         return length,chunk_type,chunk_data_bytes_in_a_list,end_position
         # dlugosc:int, chunk_type: ASCI -nazwa, chunk_data: lista kolejnych bajtów z danymi, end_position:int - koniec chunka
     
-    # funkcja służąca do odczytu danych z chunka IHDR - headera
+
     def parse_ihdr_chunk(self, chunk_data_bytes):
         height_list = chunk_data_bytes[0:4]
         width_list = chunk_data_bytes[4:8] 
         ihdr_list = chunk_data_bytes[8:13]
 
-        # łączenie list w jeden string
         height_list_joined = "".join(height_list)
         width_list_joined = "".join(width_list)
 
-        # odkodowanie danych i przypisanie ich do obiektu klasy PngMetadata()
         self._meta_data.height = int(height_list_joined, 16)
         self._meta_data.width = int(width_list_joined, 16)
         self._meta_data.depth = int(ihdr_list[0], 16)
         self._meta_data.color_type = int(ihdr_list[1], 16)
-        self._meta_data.compression_method = int(ihdr_list[2], 16)
-        self._meta_data.filter_method = int(ihdr_list[3], 16)
+
+        compression_method = int(ihdr_list[2], 16)
+        if compression_method == 0:
+            self._meta_data.compression_method = \
+                'deflate / inflate compression with a sliding window of at most 32768 bytes'
+        else:
+            self._meta_data.compression_method = 'compression method not specified in png standard'
+
+        filter_method = int(ihdr_list[3], 16)
+
+        if filter_method == 0:
+            self._meta_data.filter_method = 'adaptive filtering with five basic filter types'
+        else:
+            self._meta_data.filter_method = 'filter method not specified in png standard'
+
         self._meta_data.interlace_method = int(ihdr_list[4], 16)
 
     def parse_plte_chunk(self,chunk_data_bytes):
@@ -93,7 +104,7 @@ class PngFileParser(FileParser):
         
         chunk_data = np.array(chunk_data_bytes)
         chunk_data = np.reshape(chunk_data,(-1,3))
-        self.meta_data.palette_entires=chunk_data
+        self.meta_data.palette_entires = chunk_data
 
     def parse_exif_chunk(self, chunk_data_bytes):
         #for i in range(0, len(chunk_data_bytes)):
@@ -190,6 +201,7 @@ class PngFileParser(FileParser):
 
     def parse_xmp_in_itxt_chunk(self,data):
         root = ElementTree.fromstring(data)
+        print('XMP DATA:')
         print(data)
         xmp_information = {}
         for item in root[0][0]:
@@ -251,7 +263,7 @@ class PngFileParser(FileParser):
             elif chunk_type == "tIME":
                 self.parse_time_chunk(chunk_data_bytes)
 
-            elif chunk_type ==  "iTXt":
+            elif chunk_type == "iTXt":
                 self.parse_international_text_info(chunk_data_bytes)
 
             elif chunk_type == "gAMA":
