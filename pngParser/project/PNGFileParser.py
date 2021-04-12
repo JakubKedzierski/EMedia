@@ -104,9 +104,32 @@ class PngFileParser(FileParser):
         self.meta_data.palette_entires = chunk_data
 
     def parse_exif_chunk(self, chunk_data_bytes):
-        #for i in range(0, len(chunk_data_bytes)):
-        #    print(chunk_data_bytes[i])
-        pass
+        exif_info = ''
+        bit_order = chunk_data_bytes[0:2]
+        bit_order = "".join(bit_order)
+        bit_order = bytes.fromhex(bit_order).decode()
+        if bit_order == 'MM':
+            exif_info += "Bit order: Motorola order \n"
+        elif bit_order == 'II':
+            exif_info += "Bit order: Intel order \n"
+
+        tag_mark = chunk_data_bytes[2:4]
+        tag_mark = "".join(tag_mark)
+        if tag_mark == '002a':
+            exif_info += "Exif has proper tag mark \n"
+        else:
+            exif_info += "Exif has unknown tag mark \n"
+            return
+
+        offset_to_first_ifd = chunk_data_bytes[4:8]
+        offset_to_first_ifd = "".join(offset_to_first_ifd)
+        offset_to_first_ifd = int(offset_to_first_ifd, 16)
+
+        number_of_directory_entry = chunk_data_bytes[offset_to_first_ifd:offset_to_first_ifd+2]
+        number_of_directory_entry = "".join(number_of_directory_entry)
+        number_of_directory_entry = int(number_of_directory_entry, 16)
+
+        self._meta_data.exif_info = exif_info
 
     def parse_text_chunk(self,chunk_data_bytes):
         
@@ -266,7 +289,7 @@ class PngFileParser(FileParser):
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             self._chunk_positions.append((start_position, end_position, chunk_type))
             start_position=end_position
-            #print(chunk_type)
+
             #critical chunks:
     
             if chunk_type == "IEND":

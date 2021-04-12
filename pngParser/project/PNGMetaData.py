@@ -66,6 +66,11 @@ class PngMetadata:
             for keys in self.textual_information_dict:
                 print("|text chunk info|", keys, ": ", self.textual_information_dict[keys])
 
+        if self.exif_info is not None:
+            print('\n\neXIf CHUNK:')
+            print(self.exif_info)
+
+
     def __init__(self):
         # IHDR chunks
         self.width = None
@@ -80,6 +85,7 @@ class PngMetadata:
         self.pixels_per_x = None
         self.pixels_per_y = None
         self.phys_unit = None
+        self.exif_info = None
 
         # PLTE chunks
         self.palete_of_colors = None

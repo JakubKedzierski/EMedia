@@ -4,7 +4,7 @@ from project.global_operations import *
 
 def main():
     png_parser = PngFileParser()
-    png_parser.readFile("lots_of_chunks.png")
+    png_parser.readFile("exif.png")
     #display_image("img/test.png")
     #fast_fourier_transformation("img/test.png")
     png_parser.do_parsing()
