@@ -102,6 +102,11 @@ class PngFileParser(FileParser):
         chunk_data = np.array(chunk_data_bytes)
         chunk_data = np.reshape(chunk_data,(-1,3))
         self.meta_data.palette_entires = chunk_data
+        image = []
+        for i in range(0, int(len(chunk_data_bytes)/3)):
+            image.append([(chunk_data_bytes[3*i],chunk_data_bytes[3*i+1],chunk_data_bytes[3*i+2])])
+        plt.imshow(image)
+        plt.show()
 
     def __parse_ifd_directory(self, offset, chunk_data_bytes):
         bytes_per_entry = 12
