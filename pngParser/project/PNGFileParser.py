@@ -5,6 +5,7 @@ import datetime
 import cv2 as cv
 import numpy as np
 import zlib
+from xml.etree import cElementTree as ElementTree
 
 """
 class read, parse, save png file
@@ -174,8 +175,22 @@ class PngFileParser(FileParser):
             text = zlib.decompress(text)
             text = str(text, 'utf-8')
 
+        if keyword == 'XML:com.adobe.xmp':
+            text = self.parse_xmp_in_itxt_chunk(text)
+
         text_data="translated key: " + "(" + lang_tag  + ") "  + translated_key + " || Info: " + text.__str__()
         self._meta_data.textual_information_dict[keyword] = text_data
+
+    def parse_xmp_in_itxt_chunk(self,data):
+        root = ElementTree.fromstring(data)
+        print(data)
+        xmp_information = {}
+        for item in root[0][0]:
+            for nested in item:
+                for children in nested:
+                    xmp_information[item.tag]=children.text
+
+        return xmp_information
 
     def anonimize(self):
         for chunk in self._chunk_positions:
@@ -193,7 +208,7 @@ class PngFileParser(FileParser):
             length,chunk_type,chunk_data_bytes,end_position=self.read_chunk(start_position)
             self._chunk_positions.append((start_position,end_position,chunk_type))
             start_position=end_position
-            print(chunk_type)
+
             #critical chunks:
     
             if chunk_type == "IEND":
@@ -217,7 +232,6 @@ class PngFileParser(FileParser):
                 self.parse_international_text_info(chunk_data_bytes)
 
 
-    
     def saveFile(self,new_file_name:str):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
