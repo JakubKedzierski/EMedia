@@ -149,9 +149,9 @@ class PngFileParser(FileParser):
         if bytes_per_component * number_of_components >= 4:
             is_data = False
 
-        data_or_offset = "".join(data_entry[8:])
+        data_or_offset = "".join(data_entry[8:12])
 
-        return tag_number, data_or_offset, is_data
+        return tag_number, data_or_offset, is_data, number_of_components
 
     def parse_exif_chunk(self, chunk_data_bytes):
         exif_info = ''
@@ -179,10 +179,32 @@ class PngFileParser(FileParser):
             offset_to_next_ifd, dir_entry = self.__parse_ifd_directory(offset_to_next_ifd, chunk_data_bytes)
 
             for entry in dir_entry:
-                tag_number, data_or_offset, is_data = self.__parse_data_format_entry(entry)
+                tag_number, data_or_offset, is_data, number_of_components = self.__parse_data_format_entry(entry)
                 exif_info += "tag number:" + str(tag_number) + "\n"
 
+                tag_number = '013b'
+                is_data=False
+                data_or_offset =102
 
+                if tag_number == '013b':
+                    artist = ''
+                    number_of_components = 9 # do wywalenia po naprawie funkcji
+                    if is_data==False:
+                        for j in range(0,number_of_components):
+                            artist += chr(int(chunk_data_bytes[data_or_offset+j],16))
+                    else:
+                        for j in range(0, 4):
+                            artist += chr(int(chunk_data_bytes[data_or_offset+8+j]))
+                    exif_info += 'Artist: ' + artist + '\n'
+                if str(tag_number) == '8825': 
+                    pass
+                if str(tag_number) == '011a':
+                    x_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
+                    exif_info += 'X resolution: ' + str(y_resolution) + '\n'
+                if str(tag_number) == '011b':
+                    y_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
+                    exif_info += 'Y resolution: ' + str(y_resolution) + '\n'
+       
         self._meta_data.exif_info = exif_info
 
     def parse_text_chunk(self,chunk_data_bytes):
