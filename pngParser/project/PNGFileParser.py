@@ -182,9 +182,12 @@ class PngFileParser(FileParser):
                 tag_number, data_or_offset, is_data, number_of_components = self.__parse_data_format_entry(entry)
                 exif_info += "tag number:" + str(tag_number) + "\n"
 
-                tag_number = '013b'
-                is_data=False
-                data_or_offset =102
+                ########  Dane wpisane na sztywno do testów, do wywalenia po naprawieniu funkcji przekazującej
+                ########  tag_number, data_or_offset, is_data, number_of_components
+                #tag_number = '013b'
+                #is_data=False
+                #data_or_offset =102
+                ########
 
                 if tag_number == '013b':
                     artist = ''
