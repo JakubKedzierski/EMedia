@@ -110,7 +110,7 @@ class PngFileParser(FileParser):
 
     def __parse_ifd_directory(self, offset, chunk_data_bytes):
         bytes_per_entry = 12
-        crop_data = chunk_data_bytes[offset:]
+        crop_data = chunk_data_bytes[offset:].copy()
 
         number_of_directory_entry = crop_data[0:2]
         number_of_directory_entry = "".join(number_of_directory_entry)
@@ -118,7 +118,7 @@ class PngFileParser(FileParser):
 
         crop_data=crop_data[2:]
 
-        dir_entry = [[0] * bytes_per_entry] * number_of_directory_entry
+        dir_entry = [[0 for j in range(bytes_per_entry)] for i in range(number_of_directory_entry)]
         for i in range(0, number_of_directory_entry):
             for j in range(0,bytes_per_entry):
                 dir_entry[i][j] = crop_data[i*bytes_per_entry+j]
@@ -191,7 +191,7 @@ class PngFileParser(FileParser):
                 #is_data=False
                 #data_or_offset =102
                 ########
-
+                """
                 if tag_number == '013b':
                     artist = ''
                     number_of_components = 9 # do wywalenia po naprawie funkcji
@@ -210,6 +210,8 @@ class PngFileParser(FileParser):
                 if str(tag_number) == '011b':
                     y_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
                     exif_info += 'Y resolution: ' + str(y_resolution) + '\n'
+                    
+                """
 
         self._meta_data.exif_info = exif_info
 
