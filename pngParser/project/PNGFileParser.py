@@ -150,6 +150,8 @@ class PngFileParser(FileParser):
             is_data = False
 
         data_or_offset = "".join(data_entry[8:])
+        if not is_data:
+            data_or_offset = int(data_or_offset, 16)
 
         return tag_number, data_or_offset, is_data
 
@@ -181,7 +183,6 @@ class PngFileParser(FileParser):
             for entry in dir_entry:
                 tag_number, data_or_offset, is_data = self.__parse_data_format_entry(entry)
                 exif_info += "tag number:" + str(tag_number) + "\n"
-
 
         self._meta_data.exif_info = exif_info
 
