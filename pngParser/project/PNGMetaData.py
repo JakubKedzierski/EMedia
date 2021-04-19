@@ -45,7 +45,7 @@ class PngMetadata:
         print("Color Type:", self.color_type_explanation())
         print("Compression method: ", self.compression_method)
         print("Filter method (preprocessing method applied to the image data before compression): ", self.filter_method)
-        self.interlace_method_explanation()
+        print(self.interlace_method_explanation())
 
         if self.gamma_value is not None:
             print('\n\ngAMA CHUNK:')

@@ -164,7 +164,7 @@ class PngFileParser(FileParser):
         if bit_order == 'MM':
             exif_info += "Bit order: Motorola order \n"
         elif bit_order == 'II':
-            exif_info += "Bit order: Intel order \n"
+            exif_info += "Bit order: Intel order. Intel order parsing is not taken into account \n"
 
         tag_mark = chunk_data_bytes[2:4]
         tag_mark = "".join(tag_mark)
@@ -178,8 +178,11 @@ class PngFileParser(FileParser):
         offset_to_next_ifd = "".join(offset_to_next_ifd)
         offset_to_next_ifd = int(offset_to_next_ifd, 16)
 
+        counter = 0
         while offset_to_next_ifd != 0:
             offset_to_next_ifd, dir_entry = self.__parse_ifd_directory(offset_to_next_ifd, chunk_data_bytes)
+            exif_info += "IFD" + str(counter) + ":\n"
+            counter += 1
 
             for entry in dir_entry:
                 tag_number, data_or_offset, is_data, length = self.__parse_data_format_entry(entry)
@@ -198,17 +201,27 @@ class PngFileParser(FileParser):
                     res_unit = int(res_unit, 16)
                     exif_info += 'XResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit"
 
-                if str(tag_number) == '011b':
+                elif str(tag_number) == '011b':
                     number_of_pix = "".join(data[0:4])
                     resolution = int(number_of_pix, 16)
                     res_unit = "".join(data[4:8])
                     res_unit = int(res_unit, 16)
                     exif_info += 'YResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit"
 
-                if str(tag_number) == '8825':
+                elif str(tag_number) == '8825':
                     exif_info += "GPS INFO " + data
 
-                if str(tag_number) == '0128':
+                elif str(tag_number) == '0213':
+                    exif_info += "(YCbCr - way of encoding RGB information/practical aproximation) YCbCrPositioning: "
+                    data = int(data[3])
+                    if data == 1:
+                        exif_info += 'Centered'
+                    elif data == 2:
+                        exif_info += 'Co - sited'
+                    else:
+                        exif_info += 'not recognized'
+
+                elif str(tag_number) == '0128':
                     exif_info += "Resolution unit: "
                     data = int(data[3])
 
@@ -222,17 +235,18 @@ class PngFileParser(FileParser):
                         exif_info += 'unrecognized unit'
 
 
-                if tag_number == '013b':
+                elif tag_number == '013b':
                     artist = ''
-                    number_of_components = 9 # do wywalenia po naprawie funkcji
                     if is_data==False:
-                        for j in range(0,number_of_components):
-                            artist += chr(int(chunk_data_bytes[data_or_offset+j],16))
+                        for j in range(0,length):
+                            artist += chr(int(data[j],16))
                     else:
                         for j in range(0, 4):
-                            artist += chr(int(chunk_data_bytes[data_or_offset+8+j]))
-                    exif_info += 'Artist: ' + artist + '\n'
+                            artist += chr(int(data[8+j]))
+                    exif_info += 'Artist: ' + artist
 
+                else:
+                    exif_info += data
 
                 exif_info += "\n"
 
@@ -451,4 +465,3 @@ class PngFileParser(FileParser):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
-
