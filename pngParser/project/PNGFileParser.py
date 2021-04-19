@@ -183,12 +183,27 @@ class PngFileParser(FileParser):
 
             for entry in dir_entry:
                 tag_number, data_or_offset, is_data, length = self.__parse_data_format_entry(entry)
-                exif_info += "Tag number:" + str(tag_number) + " data:"
+                exif_info += "Tag number:" + str(tag_number) + " |data| "
                 data = ''
                 if is_data:
                     data = data_or_offset
                 else:
-                    data = "".join(chunk_data_bytes[data_or_offset:data_or_offset+length])
+                    data = chunk_data_bytes[data_or_offset:data_or_offset+length]
+
+                if str(tag_number) == '011a':
+                    number_of_pix = "".join(data[0:4])
+                    resolution = int(number_of_pix, 16)
+                    res_unit = "".join(data[4:8])
+                    res_unit = int(res_unit, 16)
+                    exif_info += 'XResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit [inch]"
+
+                if str(tag_number) == '011b':
+                    number_of_pix = "".join(data[0:4])
+                    resolution = int(number_of_pix, 16)
+                    res_unit = "".join(data[4:8])
+                    res_unit = int(res_unit, 16)
+                    exif_info += 'YResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit [inch]"
+
 
                 # data - to dane do danego tagu
 
