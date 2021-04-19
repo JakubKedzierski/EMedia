@@ -184,7 +184,8 @@ class PngFileParser(FileParser):
             for entry in dir_entry:
                 tag_number, data_or_offset, is_data, length = self.__parse_data_format_entry(entry)
                 exif_info += "Tag number:" + str(tag_number) + " |data| "
-                data = ''
+
+                data = ''     # data - to dane do danego tagu
                 if is_data:
                     data = data_or_offset
                 else:
@@ -195,19 +196,32 @@ class PngFileParser(FileParser):
                     resolution = int(number_of_pix, 16)
                     res_unit = "".join(data[4:8])
                     res_unit = int(res_unit, 16)
-                    exif_info += 'XResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit [inch]"
+                    exif_info += 'XResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit"
 
                 if str(tag_number) == '011b':
                     number_of_pix = "".join(data[0:4])
                     resolution = int(number_of_pix, 16)
                     res_unit = "".join(data[4:8])
                     res_unit = int(res_unit, 16)
-                    exif_info += 'YResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit [inch]"
+                    exif_info += 'YResolution: ' + str(resolution) + "px per " + str(res_unit) + "unit"
+
+                if str(tag_number) == '8825':
+                    exif_info += "GPS INFO " + data
+
+                if str(tag_number) == '0128':
+                    exif_info += "Resolution unit: "
+                    data = int(data[3])
+
+                    if data == 1:
+                        exif_info += 'None'
+                    elif data == 2:
+                        exif_info += 'inches'
+                    elif data == 3:
+                        exif_info += 'cm'
+                    else:
+                        exif_info += 'unrecognized unit'
 
 
-                # data - to dane do danego tagu
-
-                """
                 if tag_number == '013b':
                     artist = ''
                     number_of_components = 9 # do wywalenia po naprawie funkcji
@@ -218,18 +232,8 @@ class PngFileParser(FileParser):
                         for j in range(0, 4):
                             artist += chr(int(chunk_data_bytes[data_or_offset+8+j]))
                     exif_info += 'Artist: ' + artist + '\n'
-                if str(tag_number) == '8825':
-                    pass
-              
-                if str(tag_number) == '011a':
-                    x_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
-                    exif_info += 'X resolution: ' + str(y_resolution) + '\n'
-     
-                if str(tag_number) == '011b':
-                    y_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
-                    exif_info += 'Y resolution: ' + str(y_resolution) + '\n'
-                    
-                """
+
+
                 exif_info += "\n"
 
         self._meta_data.exif_info = exif_info
