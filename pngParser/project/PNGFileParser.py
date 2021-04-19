@@ -146,15 +146,15 @@ class PngFileParser(FileParser):
             bytes_per_component = 8
 
         is_data = True
-        if bytes_per_component * number_of_components >= 4:
+        length = bytes_per_component * number_of_components
+        if length > 4:
             is_data = False
 
         data_or_offset = "".join(data_entry[8:12])
-        data_or_offset = "".join(data_entry[8:])
         if not is_data:
             data_or_offset = int(data_or_offset, 16)
 
-        return tag_number, data_or_offset, is_data, number_of_components
+        return tag_number, data_or_offset, is_data, length
 
     def parse_exif_chunk(self, chunk_data_bytes):
         exif_info = ''
@@ -182,15 +182,16 @@ class PngFileParser(FileParser):
             offset_to_next_ifd, dir_entry = self.__parse_ifd_directory(offset_to_next_ifd, chunk_data_bytes)
 
             for entry in dir_entry:
-                tag_number, data_or_offset, is_data, number_of_components = self.__parse_data_format_entry(entry)
-                exif_info += "tag number:" + str(tag_number) + "\n"
+                tag_number, data_or_offset, is_data, length = self.__parse_data_format_entry(entry)
+                exif_info += "Tag number:" + str(tag_number) + " data:"
+                data = ''
+                if is_data:
+                    data = data_or_offset
+                else:
+                    data = "".join(chunk_data_bytes[data_or_offset:data_or_offset+length])
 
-                ########  Dane wpisane na sztywno do testów, do wywalenia po naprawieniu funkcji przekazującej
-                ########  tag_number, data_or_offset, is_data, number_of_components
-                #tag_number = '013b'
-                #is_data=False
-                #data_or_offset =102
-                ########
+                # data - to dane do danego tagu
+
                 """
                 if tag_number == '013b':
                     artist = ''
@@ -204,14 +205,17 @@ class PngFileParser(FileParser):
                     exif_info += 'Artist: ' + artist + '\n'
                 if str(tag_number) == '8825':
                     pass
+              
                 if str(tag_number) == '011a':
                     x_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
                     exif_info += 'X resolution: ' + str(y_resolution) + '\n'
+     
                 if str(tag_number) == '011b':
                     y_resolution = int(''.join(chunk_data_bytes[data_or_offset:data_or_offset+4]), 16) / int(''.join(chunk_data_bytes[data_or_offset+4:data_or_offset+8]), 16)
                     exif_info += 'Y resolution: ' + str(y_resolution) + '\n'
                     
                 """
+                exif_info += "\n"
 
         self._meta_data.exif_info = exif_info
 
