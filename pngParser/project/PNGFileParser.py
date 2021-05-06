@@ -1,12 +1,16 @@
+import binascii
+import struct
 import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
+from project.encrypting_scripts import *
 import datetime
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 import zlib
 from xml.etree import cElementTree as ElementTree
 import numpy as np
+from crc import CrcCalculator, Crc32
 
 
 class PngFileParser(FileParser):
@@ -376,8 +380,6 @@ class PngFileParser(FileParser):
 
     def parse_xmp_in_itxt_chunk(self,data):
         root = ElementTree.fromstring(data)
-        print('XMP DATA:')
-        print(data)
         xmp_information = {}
         for item in root[0][0]:
             for nested in item:
@@ -465,3 +467,25 @@ class PngFileParser(FileParser):
         with open("img/"+new_file_name,'wb') as file:
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
+
+
+    def encrypt(self):
+        for chunk in self._chunk_positions:
+            if chunk[2] == 'IDAT':
+                cryptogram = encrypt_data(self.__file_data[chunk[0]+8:chunk[1]-4])
+
+                data = self.__file_data[chunk[0]+4:chunk[0]+8]
+                data = data + cryptogram
+
+                byte_data = []
+                for i in range (0,len(data)):
+                    byte_data.append(bytes.fromhex(data[i]))
+
+                byte_data=b''.join(byte_data)
+                c = binascii.crc32(byte_data) & 0xffffffff
+
+                crc = hex(c)
+                crc = [crc[i:i + 2] for i in range(2, len(hex(c)), 2)]
+                print(crc)
+                self.__file_data[chunk[0] + 8:chunk[1] - 4] = cryptogram
+                self.__file_data[chunk[1] - 4:chunk[1]] = crc
