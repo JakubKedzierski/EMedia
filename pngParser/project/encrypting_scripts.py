@@ -12,22 +12,33 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     n = p * q
     euler = (p-1) * (q-1)
     e = 2**16 + 1
+
     while e >= euler or number.GCD(e,euler) != 1:
         e = number.getRandomNBitInteger(bits - 1)
 
     d = pow(e, -1, euler)
 
-    m_size = number.getRandomNBitInteger(n.bit_length()-1)
+    m_size = 2**16 #number.getRandomNBitInteger(n.bit_length()-1)
     if m_size > n:
         raise ValueError()
 
     data = bytearray(data)
+    #print(data)
+    i=0
+    size = 2
+    block = []
+    while True:
+        block=data[i:i+size]
+        block = int.from_bytes(block,"big")
+        #print(block)
+
+        i=i+size
+        if i >= len(data):
+            break
 
 
     print(m_size<n)
     print(d,e,p,q,n,euler)
-
-
 
     for i in range(0, len(data)):
         data[i]=120
