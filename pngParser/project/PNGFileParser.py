@@ -4,6 +4,7 @@ import sys
 from project.FileParser import FileParser
 from project.PNGMetaData import PngMetadata
 from project.encrypting_scripts import *
+from project.decoding_idat import *
 import datetime
 import matplotlib.pyplot as plt
 import matplotlib.image as img
@@ -11,6 +12,7 @@ import zlib
 from xml.etree import cElementTree as ElementTree
 import numpy as np
 from crc import CrcCalculator, Crc32
+import struct
 
 
 class PngFileParser(FileParser):
@@ -72,14 +74,14 @@ class PngFileParser(FileParser):
 
     def parse_ihdr_chunk(self, chunk_data_bytes):
         height_list = chunk_data_bytes[0:4]
-        width_list = chunk_data_bytes[4:8] 
+        width_list = chunk_data_bytes[4:8]
         ihdr_list = chunk_data_bytes[8:13]
 
         height_list_joined = "".join(height_list)
         width_list_joined = "".join(width_list)
 
-        self._meta_data.height = int(height_list_joined, 16)
-        self._meta_data.width = int(width_list_joined, 16)
+        self._meta_data.width = int(height_list_joined, 16)
+        self._meta_data.height = int(width_list_joined, 16)
         self._meta_data.depth = int(ihdr_list[0], 16)
         self._meta_data.color_type = int(ihdr_list[1], 16)
 
@@ -468,24 +470,52 @@ class PngFileParser(FileParser):
             for byte in self.__file_data:
                 file.write(bytes.fromhex(byte))
 
+    def get_idat_info(self):
+        bytes_per_pixel = 1
+        greyscale = False
+        alpha = False
+        if self._meta_data.color_type == 0:
+            bytes_per_pixel = 1
+            greyscale = True
+        if self._meta_data.color_type == 2:
+            bytes_per_pixel = 3
+        if self._meta_data.color_type == 3:
+            explanation = 1
+            alpha = True
+        if self._meta_data.color_type == 4:
+            bytes_per_pixel = 2
+        if self._meta_data.color_type == 6:
+            bytes_per_pixel = 4
+            alpha = True
+        return bytes_per_pixel,alpha,greyscale
 
     def encrypt(self):
+        data = []
         for chunk in self._chunk_positions:
             if chunk[2] == 'IDAT':
-                cryptogram = encrypt_data(self.__file_data[chunk[0]+8:chunk[1]-4])
+                data.extend(self.__file_data[chunk[0] + 8:chunk[1] - 4])
 
-                data = self.__file_data[chunk[0]+4:chunk[0]+8]
-                data = data + cryptogram
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        save_png_with_png_writer(encrypted_data,greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
 
-                byte_data = []
-                for i in range (0,len(data)):
-                    byte_data.append(bytes.fromhex(data[i]))
+        """
+                   liczenie crc na piechote 
 
-                byte_data=b''.join(byte_data)
-                c = binascii.crc32(byte_data) & 0xffffffff
+                   data = self.__file_data[chunk[0]+4:chunk[0]+8]
+                   data = data + cryptogram
 
-                crc = hex(c)
-                crc = [crc[i:i + 2] for i in range(2, len(hex(c)), 2)]
-                print(crc)
-                self.__file_data[chunk[0] + 8:chunk[1] - 4] = cryptogram
-                self.__file_data[chunk[1] - 4:chunk[1]] = crc
+                   byte_data = []
+                   for i in range (0,len(data)):
+                       byte_data.append(bytes.fromhex(data[i]))
+
+                   byte_data=b''.join(byte_data)
+                   c = binascii.crc32(byte_data) & 0xffffffff
+
+                   crc = hex(c)
+                   crc = [crc[i:i + 2] for i in range(2, len(hex(c)), 2)]
+                   print(crc)
+                   self.__file_data[chunk[0] + 8:chunk[1] - 4] = cryptogram
+                   self.__file_data[chunk[1] - 4:chunk[1]] = crc
+        """
