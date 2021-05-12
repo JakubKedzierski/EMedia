@@ -7,7 +7,26 @@ import png
 
 
 def encrypt_data(data,width, height,bytes_per_pixel):
-    p, q = generate_p_and_q()
+    bits = 10
+    p, q = generate_p_and_q(bits)
+    n = p * q
+    euler = (p-1) * (q-1)
+    e = 2**16 + 1
+    while e >= euler or number.GCD(e,euler) != 1:
+        e = number.getRandomNBitInteger(bits - 1)
+
+    d = pow(e, -1, euler)
+
+    m_size = number.getRandomNBitInteger(n.bit_length()-1)
+    if m_size > n:
+        raise ValueError()
+
+    data = bytearray(data)
+
+
+    print(m_size<n)
+    print(d,e,p,q,n,euler)
+
 
 
     for i in range(0, len(data)):
@@ -15,12 +34,12 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     return data
 
-def generate_p_and_q():
-    p = number.getRandomNBitInteger(10)
-    q = number.getRandomNBitInteger(10)
+def generate_p_and_q(bits):
+    p = number.getRandomNBitInteger(bits)
+    q = number.getRandomNBitInteger(bits)
     while not number.isPrime(p) and not number.isPrime(p):
-        p = number.getRandomNBitInteger(10)
-        q = number.getRandomNBitInteger(10)
+        p = number.getRandomNBitInteger(bits)
+        q = number.getRandomNBitInteger(bits)
 
     return p,q
 

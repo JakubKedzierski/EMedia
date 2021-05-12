@@ -8,7 +8,7 @@ def main():
 
 
     png_parser = PngFileParser()
-    img = 'tux.png'
+    img = 'exif.png'
     png_parser.readFile(img)
     #display_image("img/" + img)
     #fast_fourier_transformation("img/" + img)
