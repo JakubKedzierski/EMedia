@@ -7,7 +7,8 @@ import png
 import math
 
 def encrypt_data(data,width, height,bytes_per_pixel):
-    bits = 34
+    #print(data)
+    bits = 32
     p, q = generate_p_and_q(bits)
     n = p * q
     euler = (p-1) * (q-1)
@@ -18,7 +19,7 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     d = pow(e, -1, euler)
 
-    m_size = 2**16 #number.getRandomNBitInteger(n.bit_length()-1)
+    m_size = 2**64 #number.getRandomNBitInteger(n.bit_length()-1)
     if m_size > n:
         raise ValueError()
 
@@ -50,25 +51,17 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     for i in range(0, number_of_blocks):
         block_list = [] # lista ze składowymi bloku
 
-        for _number in data[i*size_of_block:i*size_of_block + size_of_block]: # do zautomatyzowania
+        for _number in data[i*size_of_block:i*size_of_block + size_of_block]: 
             new_number = None
             if len(_number) == 8:
                 new_number = _number
-            if len(_number) == 7:
-                new_number = '0' + _number
-            if len(_number) == 6:
-                new_number = '00' + _number
-            if len(_number) == 5:
-                new_number = '000' + _number
-            if len(_number) == 4:
-                new_number = '0000' + _number
-            if len(_number) == 3:
-                new_number = '00000' + _number
-            if len(_number) == 2:
-                new_number = '000000' + _number
-            if len(_number) == 1:
-                new_number = '0000000' + _number
+            else:
+                prefix = '0'
+                for i in range (0, 7 - len(_number)):
+                    prefix = '0' + prefix
+                new_number = prefix + _number
             block_list.append(new_number)
+            
 
         binary_block = ''.join(block_list)
         decimal_block = int(binary_block, 2)
@@ -76,10 +69,6 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     print('Liczba bloków:', len(blocks), 'Liczba pikseli:', len(data)) 
     #print(blocks)
-    
-
-    for i in range(0, len(data)):
-        data[i]=120
 
     print(m_size<n)
     
@@ -89,16 +78,51 @@ def encrypt_data(data,width, height,bytes_per_pixel):
         ciphered = pow(blocks[i], e, n)
         ciphered_blocks.append(ciphered)
 
+    for bl in ciphered_blocks:
+        if len(format(bl, 'b')) > 64:
+            pass
+            #print(len(format(bl, 'b')))
 
     print('Zaszyfrowane bloki:', ciphered_blocks)
     print('d:', d, 'e:',e, 'p:', p, 'q:', q, 'n:', n, 'euler:',euler)
-    return data
+    
+
+    ###### Zmiana zaszyfrowanych bloków na piksele
+    pixels = []
+
+    # dla wszystkich bloków poza ostatnim
+    for j in range (0, len(ciphered_blocks) - 1):
+        binary_block = format(ciphered_blocks[j], 'b')
+        for i in range(0, 7):
+            binary_number = binary_block[i*8:i*8+8]
+            decimal_number = int(binary_number, 2)
+            pixels.append(decimal_number)
+        binary_number = binary_block[56: len(binary_block)]
+        decimal_number = int(binary_number, 2)
+        pixels.append(decimal_number)
+    
+    #last_block = ciphered_blocks[len(ciphered_blocks) - 1]
+    #binary_last_block = format(last_block, 'b')
+    #for i in range(0, len(data) - len(pixels)):
+    #    binary_number = binary_last_block[i*8:i*8+8]
+    #    decimal_number = int(binary_number, 2)
+    #    pixels.append(decimal_number)
+    pixels.append(1)
+    pixels.append(1)
+    pixels.append(1)
+    pixels.append(1)
+
+    for i in range(0, len(pixels)):
+        if(pixels[i] > 255):
+            pixels[i] = 255
+    #print(pixels, len(pixels))
+    return pixels
 
 def generate_p_and_q(bits):
-    p = number.getRandomNBitInteger(bits)
+    p = number.getRandomNBitInteger(bits+1)
     q = number.getRandomNBitInteger(bits)
     while not number.isPrime(p) and not number.isPrime(p):
-        p = number.getRandomNBitInteger(bits)
+        p = number.getRandomNBitInteger(bits+1)
         q = number.getRandomNBitInteger(bits)
 
     return p,q
