@@ -6,9 +6,11 @@ from Crypto.Util import number
 import png
 import math
 
+######################################################
+###   Bloki jawne o długości 64bajtów, 
 def encrypt_data(data,width, height,bytes_per_pixel):
     #print(data)
-    bits = 32
+    bits = 260
     p, q = generate_p_and_q(bits)
     n = p * q
     euler = (p-1) * (q-1)
@@ -19,32 +21,17 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     d = pow(e, -1, euler)
 
-    m_size = 2**64 #number.getRandomNBitInteger(n.bit_length()-1)
+    m_size = 2**67 #number.getRandomNBitInteger(n.bit_length()-1)
     if m_size > n:
         raise ValueError()
 
-    #data = bytearray(data)
-    #print(data)
-    i=0
-    size = 2
-    block = []
-    while True:
-        block=data[i:i+size]
-        block = int.from_bytes(block,"big")
-        #print(block)
 
-        i=i+size
-        if i >= len(data):
-            break
+    size_of_block = 64 # rozmiar bloku w bajtach
+    number_of_blocks = math.ceil(len(data)/size_of_block) # obliczenie liczby bloków (zaokrąglenie w górę), 1 piksel zajmuje 1 bajt
 
-
-    size_of_block = 8 # rozmiar bloku w bajtach
-    number_of_blocks = math.ceil(len(data)/size_of_block) # obliczenie liczby bloków (zaokrąglenie w górę)
-
-
+    
     for i in range (0, len(data)): # zamiana na liczby binarne
         data[i] = format(data[i], 'b')
-
 
     blocks = [] # lista z blokami w zapisie dziesiętnym
 
@@ -78,29 +65,41 @@ def encrypt_data(data,width, height,bytes_per_pixel):
         ciphered = pow(blocks[i], e, n)
         ciphered_blocks.append(ciphered)
 
-    for bl in ciphered_blocks:
-        if len(format(bl, 'b')) > 64:
-            pass
-            #print(len(format(bl, 'b')))
-
-    print('Zaszyfrowane bloki:', ciphered_blocks)
-    print('d:', d, 'e:',e, 'p:', p, 'q:', q, 'n:', n, 'euler:',euler)
     
 
+    #print('Zaszyfrowane bloki:', ciphered_blocks)
+    print('d:', d, 'e:',e, 'p:', p, 'q:', q, 'n:', n, 'euler:',euler)
+    
+    #for block in ciphered_blocks:
+        #print('DLUGOSC',len(format(block, 'b')))
     ###### Zmiana zaszyfrowanych bloków na piksele
     pixels = []
-
+    print(ciphered_blocks)
     # dla wszystkich bloków poza ostatnim
     for j in range (0, len(ciphered_blocks) - 1):
         binary_block = format(ciphered_blocks[j], 'b')
-        for i in range(0, 7):
+        for i in range(0, size_of_block):
             binary_number = binary_block[i*8:i*8+8]
             decimal_number = int(binary_number, 2)
             pixels.append(decimal_number)
-        binary_number = binary_block[56: len(binary_block)]
+        binary_number = binary_block[size_of_block*8: len(binary_block)]
         decimal_number = int(binary_number, 2)
         pixels.append(decimal_number)
+
+    # ostatni blok - do zrobienia
+    #last_block = ciphered_blocks[len(ciphered_blocks)-1]
+
     
+    #print('PIXELE:', pixels)
+    print(len(pixels)) # bez ostatniego bloku
+    
+    # program wywala się przy zapisywaniu, jeżeli liczba danych jest inna niż początkowa
+    pi = []
+    for i in range(0,len(data)):
+        pi.append(pixels[i])
+    return pi
+
+""" 
     #last_block = ciphered_blocks[len(ciphered_blocks) - 1]
     #binary_last_block = format(last_block, 'b')
     #for i in range(0, len(data) - len(pixels)):
@@ -117,12 +116,14 @@ def encrypt_data(data,width, height,bytes_per_pixel):
             pixels[i] = 255
     #print(pixels, len(pixels))
     return pixels
+"""
+
 
 def generate_p_and_q(bits):
-    p = number.getRandomNBitInteger(bits+1)
+    p = number.getRandomNBitInteger(bits)
     q = number.getRandomNBitInteger(bits)
     while not number.isPrime(p) and not number.isPrime(p):
-        p = number.getRandomNBitInteger(bits+1)
+        p = number.getRandomNBitInteger(bits)
         q = number.getRandomNBitInteger(bits)
 
     return p,q
