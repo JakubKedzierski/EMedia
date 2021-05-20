@@ -10,6 +10,7 @@ import math
 ###   Bloki jawne o długości 64bajtów, 
 def encrypt_data(data,width, height,bytes_per_pixel):
     #print(data)
+    print(len(data))
     bits = 260
     p, q = generate_p_and_q(bits)
     n = p * q
@@ -21,9 +22,9 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     d = pow(e, -1, euler)
 
-    m_size = 2**67 #number.getRandomNBitInteger(n.bit_length()-1)
-    if m_size > n:
-        raise ValueError()
+    #m_size = 2**67 #number.getRandomNBitInteger(n.bit_length()-1)
+    #if m_size > n:
+        #raise ValueError()
 
 
     size_of_block = 64 # rozmiar bloku w bajtach
@@ -55,9 +56,8 @@ def encrypt_data(data,width, height,bytes_per_pixel):
         blocks.append(decimal_block)
 
     print('Liczba bloków:', len(blocks), 'Liczba pikseli:', len(data)) 
-    #print(blocks)
 
-    print(m_size<n)
+    print(size_of_block<n)
     
     ciphered_blocks = [] # lista na zaszyfrowane bloki
 
@@ -65,58 +65,37 @@ def encrypt_data(data,width, height,bytes_per_pixel):
         ciphered = pow(blocks[i], e, n)
         ciphered_blocks.append(ciphered)
 
-    
-
     #print('Zaszyfrowane bloki:', ciphered_blocks)
     print('d:', d, 'e:',e, 'p:', p, 'q:', q, 'n:', n, 'euler:',euler)
-    
-    #for block in ciphered_blocks:
-        #print('DLUGOSC',len(format(block, 'b')))
-    ###### Zmiana zaszyfrowanych bloków na piksele
+
+
     pixels = []
-    print(ciphered_blocks)
-    # dla wszystkich bloków poza ostatnim
-    for j in range (0, len(ciphered_blocks) - 1):
+    # dla wszystkich bloków 
+    for j in range (0, len(ciphered_blocks)):
+        invalid_count = 0
         binary_block = format(ciphered_blocks[j], 'b')
-        for i in range(0, size_of_block):
+        for i in range(0, size_of_block):   # blok zaszyfrowany jest o bajt większy niż blok jawny
             binary_number = binary_block[i*8:i*8+8]
+            if(binary_number != ''):
+                decimal_number = int(binary_number, 2)
+                pixels.append(decimal_number)
+            else:
+                invalid_count += 1
+                pixels.append(255) # na razie takie rozwiązanie, nie wiem z czego wynikają puste stringi, ale jest ich 
+                                   # tak mało że można je na razie pominąć (<100 w obrazie)
+        binary_number = binary_block[size_of_block*8:len(binary_block)]
+        if(binary_number != ''):                
             decimal_number = int(binary_number, 2)
             pixels.append(decimal_number)
-        binary_number = binary_block[size_of_block*8: len(binary_block)]
-        decimal_number = int(binary_number, 2)
-        pixels.append(decimal_number)
+        else:
+            invalid_count += 1
+            pixels.append(255)
 
-    # ostatni blok - do zrobienia
-    #last_block = ciphered_blocks[len(ciphered_blocks)-1]
+    print('liczba niepoprawnych bloków:', invalid_count)
+    print('Długosc obrazu poczatkowego: ', len(data))
+    print('Długość obrazu końcowego:    ', len(pixels))
 
-    
-    #print('PIXELE:', pixels)
-    print(len(pixels)) # bez ostatniego bloku
-    
-    # program wywala się przy zapisywaniu, jeżeli liczba danych jest inna niż początkowa
-    pi = []
-    for i in range(0,len(data)):
-        pi.append(pixels[i])
-    return pi
-
-""" 
-    #last_block = ciphered_blocks[len(ciphered_blocks) - 1]
-    #binary_last_block = format(last_block, 'b')
-    #for i in range(0, len(data) - len(pixels)):
-    #    binary_number = binary_last_block[i*8:i*8+8]
-    #    decimal_number = int(binary_number, 2)
-    #    pixels.append(decimal_number)
-    pixels.append(1)
-    pixels.append(1)
-    pixels.append(1)
-    pixels.append(1)
-
-    for i in range(0, len(pixels)):
-        if(pixels[i] > 255):
-            pixels[i] = 255
-    #print(pixels, len(pixels))
     return pixels
-"""
 
 
 def generate_p_and_q(bits):
