@@ -9,8 +9,7 @@ import math
 ######################################################
 ###   Bloki jawne o długości 64bajtów, 
 def encrypt_data(data,width, height,bytes_per_pixel):
-    #print(data)
-    print(len(data))
+
     bits = 260
     p, q = generate_p_and_q(bits)
     n = p * q
@@ -21,11 +20,6 @@ def encrypt_data(data,width, height,bytes_per_pixel):
         e = number.getRandomNBitInteger(bits - 1)
 
     d = pow(e, -1, euler)
-
-    #m_size = 2**67 #number.getRandomNBitInteger(n.bit_length()-1)
-    #if m_size > n:
-        #raise ValueError()
-
 
     size_of_block = 64 # rozmiar bloku w bajtach
     number_of_blocks = math.ceil(len(data)/size_of_block) # obliczenie liczby bloków (zaokrąglenie w górę), 1 piksel zajmuje 1 bajt
@@ -57,16 +51,12 @@ def encrypt_data(data,width, height,bytes_per_pixel):
 
     print('Liczba bloków:', len(blocks), 'Liczba pikseli:', len(data)) 
 
-    print(size_of_block<n)
     
     ciphered_blocks = [] # lista na zaszyfrowane bloki
 
     for i in range(0, len(blocks)): # szyfrowanie wszystkich bloków
         ciphered = pow(blocks[i], e, n)
         ciphered_blocks.append(ciphered)
-
-    #print('Zaszyfrowane bloki:', ciphered_blocks)
-    print('d:', d, 'e:',e, 'p:', p, 'q:', q, 'n:', n, 'euler:',euler)
 
 
     pixels = []
@@ -95,7 +85,7 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     print('Długosc obrazu poczatkowego: ', len(data))
     print('Długość obrazu końcowego:    ', len(pixels))
 
-    return pixels
+    return pixels[:len(data)], pixels[len(data):]
 
 
 def generate_p_and_q(bits):
@@ -108,12 +98,14 @@ def generate_p_and_q(bits):
     return p,q
 
 
-def save_png_with_png_writer(data,greyscale,alpha, width, height,bytes_per_pixel):
+def save_png_with_png_writer(data,data_exceeded,greyscale,alpha, width, height,bytes_per_pixel):
     bytes_row_width = width * bytes_per_pixel
     pixels_grouped_by_rows = [data[i: i + bytes_row_width] for i in range(0, len(data), bytes_row_width)]
 
     writer = png.Writer(width, height, greyscale=greyscale, alpha=alpha)
     file = open('png.png', 'wb')
     writer.write(file, pixels_grouped_by_rows)
+    file.write(bytearray(data_exceeded))
     file.close()
+
     return data

@@ -497,8 +497,8 @@ class PngFileParser(FileParser):
 
         bytes_per_pixel, alpha, greyscale = self.get_idat_info()
         decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        encrypted_data = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        save_png_with_png_writer(encrypted_data,greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data_cropped, encrypted_data_exceeded = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
 
         """
                    liczenie crc na piechote 
