@@ -16,10 +16,15 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     euler = (p-1) * (q-1)
     e = 2**16 + 1
 
+
+
     while e >= euler or number.GCD(e,euler) != 1:
         e = number.getRandomNBitInteger(bits - 1)
 
     d = pow(e, -1, euler)
+
+    public_key = (n,e)
+    private_key = (n,d)
 
     size_of_block = 64 # rozmiar bloku w bajtach
     number_of_blocks = math.ceil(len(data)/size_of_block) # obliczenie liczby bloków (zaokrąglenie w górę), 1 piksel zajmuje 1 bajt
@@ -73,6 +78,7 @@ def encrypt_data(data,width, height,bytes_per_pixel):
                 invalid_count += 1
                 pixels.append(255) # na razie takie rozwiązanie, nie wiem z czego wynikają puste stringi, ale jest ich 
                                    # tak mało że można je na razie pominąć (<100 w obrazie)
+
         binary_number = binary_block[size_of_block*8:len(binary_block)]
         if(binary_number != ''):                
             decimal_number = int(binary_number, 2)
@@ -85,7 +91,7 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     print('Długosc obrazu poczatkowego: ', len(data))
     print('Długość obrazu końcowego:    ', len(pixels))
 
-    return pixels[:len(data)], pixels[len(data):]
+    return pixels[:len(data)], pixels[len(data):], public_key, private_key
 
 
 def generate_p_and_q(bits):
@@ -103,7 +109,7 @@ def save_png_with_png_writer(data,data_exceeded,greyscale,alpha, width, height,b
     pixels_grouped_by_rows = [data[i: i + bytes_row_width] for i in range(0, len(data), bytes_row_width)]
 
     writer = png.Writer(width, height, greyscale=greyscale, alpha=alpha)
-    file = open('png.png', 'wb')
+    file = open('img/after_encrypting.png', 'wb')
     writer.write(file, pixels_grouped_by_rows)
     file.write(bytearray(data_exceeded))
     file.close()

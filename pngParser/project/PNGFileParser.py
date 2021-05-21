@@ -21,6 +21,7 @@ class PngFileParser(FileParser):
         self.__file_data = []  #whole png file with headers and each chunk, data is in hex notation
         self._meta_data = PngMetadata()   # png file metada
         self._chunk_positions = []
+        self.after_iend = []
 
     @property
     def file_data(self):
@@ -418,6 +419,7 @@ class PngFileParser(FileParser):
             #critical chunks:
     
             if chunk_type == "IEND":
+                self.after_iend = self.__file_data[start_position-4:]
                 break
 
             if chunk_type == "IHDR":
@@ -489,16 +491,45 @@ class PngFileParser(FileParser):
             alpha = True
         return bytes_per_pixel,alpha,greyscale
 
-    def encrypt(self):
+    def get_idat(self):
         data = []
         for chunk in self._chunk_positions:
             if chunk[2] == 'IDAT':
                 data.extend(self.__file_data[chunk[0] + 8:chunk[1] - 4])
+        return data
+
+    def encrypt(self):
+
+        data = self.get_idat()
 
         bytes_per_pixel, alpha, greyscale = self.get_idat_info()
         decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        encrypted_data_cropped, encrypted_data_exceeded = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data_cropped, encrypted_data_exceeded, public_key, private_key = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
         save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+
+    def decrypt(self):
+        data = self.get_idat()
+        #print(data)
+        #print(self.after_iend)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         """
                    liczenie crc na piechote 

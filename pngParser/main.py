@@ -8,11 +8,12 @@ def main():
 
 
     png_parser = PngFileParser()
-    img = 'lots_of_chunks.png'
+    img = 'after_encrypting.png'
     png_parser.readFile(img)
     png_parser.do_parsing()
-    #png_parser._meta_data.show_data()
-    png_parser.encrypt()
+    png_parser._meta_data.show_data()
+    #png_parser.encrypt()
+    png_parser.decrypt()
 
 
 
