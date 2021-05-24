@@ -509,24 +509,7 @@ class PngFileParser(FileParser):
 
     def decrypt(self):
         data = self.get_idat()
-        #print(data)
-        #print(self.after_iend)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        data = data + self.after_iend
 
 
 

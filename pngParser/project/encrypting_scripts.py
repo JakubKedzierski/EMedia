@@ -5,24 +5,46 @@ import numpy as np
 from Crypto.Util import number
 import png
 import math
+import random
 
-######################################################
-###   Bloki jawne o długości 64bajtów, 
-def encrypt_data(data,width, height,bytes_per_pixel):
 
-    bits = 260
-    p, q = generate_p_and_q(bits)
-    n = p * q
-    euler = (p-1) * (q-1)
+def generate_p_and_q(bits):
+    p = 2
+    q = 2
+    while True:
+        p = number.getRandomNBitInteger(bits)
+        if number.isPrime(p):
+            break
+
+    while True:
+        q = number.getRandomNBitInteger(bits)
+        if number.isPrime(q):
+            break
+
+    return p, q
+
+def generate_keys():
+    key_length = 520
+    bits = int(key_length/2)
+
+    euler = 0
+    while euler.bit_length() != key_length:
+        p, q = generate_p_and_q(bits)
+        n = p * q
+        euler = (p-1) * (q-1)
+
     e = 2**16 + 1
-
-
 
     while e >= euler or number.GCD(e,euler) != 1:
         e = number.getRandomNBitInteger(bits - 1)
 
     d = pow(e, -1, euler)
 
+    return n,e,d
+
+def encrypt_data(data,width, height,bytes_per_pixel):
+
+    n,e,d = generate_keys()
     public_key = (n,e)
     private_key = (n,d)
 
@@ -94,14 +116,7 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     return pixels[:len(data)], pixels[len(data):], public_key, private_key
 
 
-def generate_p_and_q(bits):
-    p = number.getRandomNBitInteger(bits)
-    q = number.getRandomNBitInteger(bits)
-    while not number.isPrime(p) and not number.isPrime(p):
-        p = number.getRandomNBitInteger(bits)
-        q = number.getRandomNBitInteger(bits)
 
-    return p,q
 
 
 def save_png_with_png_writer(data,data_exceeded,greyscale,alpha, width, height,bytes_per_pixel):
