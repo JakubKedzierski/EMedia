@@ -43,88 +43,49 @@ def generate_keys():
     return n,e,d
 
 def encrypt_data(data,width, height,bytes_per_pixel):
-
     n,e,d = generate_keys()
-    public_key = (n,e)
     private_key = (n,d)
-
     size_of_block = 64 # rozmiar bloku w bajtach
-    number_of_blocks = math.ceil(len(data)/size_of_block) # obliczenie liczby bloków (zaokrąglenie w górę), 1 piksel zajmuje 1 bajt
-
-    
-    for i in range (0, len(data)): # zamiana na liczby binarne
-        data[i] = format(data[i], 'b')
-
-    blocks = [] # lista z blokami w zapisie dziesiętnym
-
-    for i in range(0, number_of_blocks):
-        block_list = [] # lista ze składowymi bloku
-
-        for _number in data[i*size_of_block:i*size_of_block + size_of_block]: 
-            new_number = None
-            if len(_number) == 8:
-                new_number = _number
-            else:
-                prefix = '0'
-                for i in range (0, 7 - len(_number)):
-                    prefix = '0' + prefix
-                new_number = prefix + _number
-            block_list.append(new_number)
-            
-
-        binary_block = ''.join(block_list)
-        decimal_block = int(binary_block, 2)
-        blocks.append(decimal_block)
-
-    print('Liczba bloków:', len(blocks), 'Liczba pikseli:', len(data)) 
-
-    
-    ciphered_blocks = [] # lista na zaszyfrowane bloki
-
-    for i in range(0, len(blocks)): # szyfrowanie wszystkich bloków
-        ciphered = pow(blocks[i], e, n)
-        ciphered_blocks.append(ciphered)
-
 
     pixels = []
-    # dla wszystkich bloków 
-    for j in range (0, len(ciphered_blocks)):
-        invalid_count = 0
-        binary_block = format(ciphered_blocks[j], 'b')
-        for i in range(0, size_of_block):   # blok zaszyfrowany jest o bajt większy niż blok jawny
-            binary_number = binary_block[i*8:i*8+8]
-            if(binary_number != ''):
-                decimal_number = int(binary_number, 2)
-                pixels.append(decimal_number)
-            else:
-                invalid_count += 1
-                pixels.append(255) # na razie takie rozwiązanie, nie wiem z czego wynikają puste stringi, ale jest ich 
-                                   # tak mało że można je na razie pominąć (<100 w obrazie)
+    for i in range(0,len(data),size_of_block):
+        bytes_to_encrypt = bytearray(data[i: i + size_of_block])
+        cipher_text = pow(int.from_bytes(bytes_to_encrypt, 'big'), e, n) # kodowanie do kryptogramu
+        block = cipher_text.to_bytes(n.bit_length(), 'big') # tworzony jest blok o długości n w bajtach
 
-        binary_number = binary_block[size_of_block*8:len(binary_block)]
-        if(binary_number != ''):                
-            decimal_number = int(binary_number, 2)
-            pixels.append(decimal_number)
-        else:
-            invalid_count += 1
-            pixels.append(255)
+        for j in range(0,len(block)):
+            pixels.append(block[j])   # każy bajt jest osobno dodawany do tablicy pikseli
 
-    print('liczba niepoprawnych bloków:', invalid_count)
-    print('Długosc obrazu poczatkowego: ', len(data))
-    print('Długość obrazu końcowego:    ', len(pixels))
+    return pixels[:len(data)], pixels[len(data):], private_key, size_of_block
 
-    return pixels[:len(data)], pixels[len(data):], public_key, private_key
+def decrypt(data, private_key,chunk_size):
+    n = private_key[0]
+    d = private_key[1]
+
+    size_of_block = n.bit_length()
+
+    pixels_byte= []
+    for i in range(0, len(data), size_of_block):
+        bytes_to_decrypt = bytearray(data[i: i + size_of_block])
+        plain_text = pow(int.from_bytes(bytes_to_decrypt, 'big'), d, n)
+        block = plain_text.to_bytes(chunk_size, 'big')
+
+        for j in range(0,chunk_size):
+            pixels_byte.append(block[j:j+1])
+
+    pixels = []
+    for pixel in pixels_byte:
+        pixels.append(int.from_bytes(pixel, 'big'))
+
+    return pixels
 
 
-
-
-
-def save_png_with_png_writer(data,data_exceeded,greyscale,alpha, width, height,bytes_per_pixel):
+def save_png_with_png_writer(data,data_exceeded,greyscale,alpha, width, height,bytes_per_pixel, filename='img/after_encrypting.png'):
     bytes_row_width = width * bytes_per_pixel
     pixels_grouped_by_rows = [data[i: i + bytes_row_width] for i in range(0, len(data), bytes_row_width)]
 
     writer = png.Writer(width, height, greyscale=greyscale, alpha=alpha)
-    file = open('img/after_encrypting.png', 'wb')
+    file = open(filename, 'wb')
     writer.write(file, pixels_grouped_by_rows)
     file.write(bytearray(data_exceeded))
     file.close()

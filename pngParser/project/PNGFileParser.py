@@ -504,32 +504,23 @@ class PngFileParser(FileParser):
 
         bytes_per_pixel, alpha, greyscale = self.get_idat_info()
         decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        encrypted_data_cropped, encrypted_data_exceeded, public_key, private_key = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
         save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
 
-    def decrypt(self):
+        return private_key,size_of_block
+
+    def decrypt(self,private_key,chunk_size):
         data = self.get_idat()
-        data = data + self.after_iend
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
 
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
 
+        for i in range(0,len(self.after_iend )):
+            self.after_iend[i] = int(self.after_iend[i],16)
+        self.after_iend = self.after_iend[4:]
 
+        data = decoded_idat + self.after_iend
+        pixels = decrypt(data,private_key,chunk_size)
+        save_png_with_png_writer(pixels[0:self._meta_data.width * self._meta_data.height * bytes_per_pixel], [], greyscale, alpha,
+                                 self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_decrypting.png')
 
-        """
-                   liczenie crc na piechote 
-
-                   data = self.__file_data[chunk[0]+4:chunk[0]+8]
-                   data = data + cryptogram
-
-                   byte_data = []
-                   for i in range (0,len(data)):
-                       byte_data.append(bytes.fromhex(data[i]))
-
-                   byte_data=b''.join(byte_data)
-                   c = binascii.crc32(byte_data) & 0xffffffff
-
-                   crc = hex(c)
-                   crc = [crc[i:i + 2] for i in range(2, len(hex(c)), 2)]
-                   print(crc)
-                   self.__file_data[chunk[0] + 8:chunk[1] - 4] = cryptogram
-                   self.__file_data[chunk[1] - 4:chunk[1]] = crc
-        """
