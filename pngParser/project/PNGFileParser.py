@@ -517,7 +517,7 @@ class PngFileParser(FileParser):
 
         for i in range(0,len(self.after_iend )):
             self.after_iend[i] = int(self.after_iend[i],16)
-        self.after_iend = self.after_iend[4:]
+        self.after_iend = self.after_iend[4:] # przesuniecie poza nazwe IEND
 
         data = decoded_idat + self.after_iend
         pixels = decrypt(data,private_key,chunk_size)

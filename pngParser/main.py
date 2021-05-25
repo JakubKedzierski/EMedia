@@ -50,7 +50,7 @@ def main():
     """
 
     png_parser = PngFileParser()
-    img = 'test.png'
+    img = 'lots_of_chunks.png'
     png_parser.readFile(img)
     png_parser.do_parsing()
     #png_parser._meta_data.show_data()

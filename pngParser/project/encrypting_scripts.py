@@ -46,10 +46,11 @@ def encrypt_data(data,width, height,bytes_per_pixel):
     n,e,d = generate_keys()
     private_key = (n,d)
     size_of_block = 64 # rozmiar bloku w bajtach
+    data = bytearray(data)
 
     pixels = []
     for i in range(0,len(data),size_of_block):
-        bytes_to_encrypt = bytearray(data[i: i + size_of_block])
+        bytes_to_encrypt = data[i: i + size_of_block]
         cipher_text = pow(int.from_bytes(bytes_to_encrypt, 'big'), e, n) # kodowanie do kryptogramu
         block = cipher_text.to_bytes(n.bit_length(), 'big') # tworzony jest blok o długości n w bajtach
 
@@ -63,15 +64,16 @@ def decrypt(data, private_key,chunk_size):
     d = private_key[1]
 
     size_of_block = n.bit_length()
+    data = bytearray(data)
 
     pixels_byte= []
     for i in range(0, len(data), size_of_block):
-        bytes_to_decrypt = bytearray(data[i: i + size_of_block])
+        bytes_to_decrypt = data[i: i + size_of_block]
         plain_text = pow(int.from_bytes(bytes_to_decrypt, 'big'), d, n)
         block = plain_text.to_bytes(chunk_size, 'big')
 
         for j in range(0,chunk_size):
-            pixels_byte.append(block[j:j+1])
+            pixels_byte.append(block[j:j+1])   # dodajemy do tablicy pikselow/bajtow bajt po bajcie piksele
 
     pixels = []
     for pixel in pixels_byte:
