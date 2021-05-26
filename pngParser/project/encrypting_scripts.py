@@ -60,29 +60,32 @@ def encrypt_data(data):
     return pixels[:len(data)], pixels[len(data):], private_key, size_of_block
 
 def encrypt_data_CBC(data):
-    n, e, d = generate_keys()
-    private_key = (n, d)
-    size_of_block = 64  # rozmiar bloku w bajtach
+    n,e,d = generate_keys()
+    private_key = (n,d)
+    size_of_block = 64 # rozmiar bloku w bajtach
     data = bytearray(data)
-    initialization_vector = number.getRandomNBitInteger(size_of_block*8)
+    initialization_vector = number.getRandomNBitInteger(size_of_block * 8)
+    previous_vector = initialization_vector
 
     pixels = []
-    previous_vector = initialization_vector
-    for i in range(0, len(data), size_of_block):
+    for i in range(0,len(data),size_of_block):
         bytes_to_encrypt = data[i: i + size_of_block]
         int_cipher = int.from_bytes(bytes_to_encrypt, 'big')
 
         previous_vector = previous_vector.to_bytes(int(n.bit_length()/8), 'big')
         previous_vector = int.from_bytes(previous_vector[0:len(bytes_to_encrypt)], 'big') # dopasowanie wektora inizjalizujacego do rozmiaru liczby z bloku
+        int_cipher = int_cipher ^ previous_vector
 
-        to_cipher_int = int_cipher ^ previous_vector
-        cipher_text = pow(to_cipher_int, e, n)  # kodowanie do kryptogramu
-        previous_vector = cipher_text # previous vector musi byc mniejszy o jeden bajt
-        block = cipher_text.to_bytes(n.bit_length(), 'big')  # tworzony jest blok o długości n w bajtach
-        for j in range(0, len(block)):
-            pixels.append(block[j])  # każy bajt jest osobno dodawany do tablicy pikseli
+        cipher_text = pow(int_cipher, e, n) # kodowanie do kryptogramu
+        previous_vector = cipher_text
+        block = cipher_text.to_bytes(n.bit_length(), 'big') # tworzony jest blok o długości n w bajtach
+
+        for j in range(0,len(block)):
+            pixels.append(block[j])   # każy bajt jest osobno dodawany do tablicy pikseli
 
     return pixels[:len(data)], pixels[len(data):], private_key, size_of_block, initialization_vector
+
+
 
 def decrypt_data_CBC(data, private_key,chunk_size, vector):
     n = private_key[0]
@@ -96,7 +99,6 @@ def decrypt_data_CBC(data, private_key,chunk_size, vector):
         bytes_to_decrypt = data[i: i + size_of_block]
         next_vector = int.from_bytes(bytes_to_decrypt, 'big')
         plain_text = pow(next_vector, d, n)
-        print(plain_text.bit_length())
 
         vector = vector.to_bytes(int(n.bit_length()/8), 'big')
         vector = int.from_bytes(vector[0:chunk_size],'big')
@@ -126,7 +128,6 @@ def decrypt(data, private_key,chunk_size):
     for i in range(0, len(data), size_of_block):
         bytes_to_decrypt = data[i: i + size_of_block]
         plain_text = pow(int.from_bytes(bytes_to_decrypt, 'big'), d, n)
-        print(plain_text.bit_length())
         block = plain_text.to_bytes(chunk_size, 'big')
 
         for j in range(0,chunk_size):
