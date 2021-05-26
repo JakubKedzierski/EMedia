@@ -504,10 +504,39 @@ class PngFileParser(FileParser):
 
         bytes_per_pixel, alpha, greyscale = self.get_idat_info()
         decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block = encrypt_data(decoded_idat, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block = encrypt_data(decoded_idat)
+
         save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale,alpha,self._meta_data.width, self._meta_data.height, bytes_per_pixel)
 
         return private_key,size_of_block
+
+    def encrypt_with_CBC(self):
+        data = self.get_idat()
+
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block, initialization_vector = encrypt_data_CBC(decoded_idat)
+
+        save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale, alpha,
+                                 self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_encryptingCBC.png')
+
+        return private_key, size_of_block, initialization_vector
+
+    def decryptCBC(self,private_key, size_of_block,vector ):
+        data = self.get_idat()
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
+
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+
+        for i in range(0,len(self.after_iend )):
+            self.after_iend[i] = int(self.after_iend[i],16)
+        self.after_iend = self.after_iend[4:] # przesuniecie poza nazwe IEND
+
+        data = decoded_idat + self.after_iend
+        pixels = decrypt_data_CBC(data,private_key,size_of_block,vector)
+        save_png_with_png_writer(pixels[0:self._meta_data.width * self._meta_data.height * bytes_per_pixel], [], greyscale, alpha,
+                                 self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_decryptingCBC.png')
+
 
     def decrypt(self,private_key,chunk_size):
         data = self.get_idat()

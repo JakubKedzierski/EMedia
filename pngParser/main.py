@@ -54,13 +54,15 @@ def main():
     png_parser.readFile(img)
     png_parser.do_parsing()
     #png_parser._meta_data.show_data()
-    private_key, size_of_block = png_parser.encrypt()
+    #private_key, size_of_block = png_parser.encrypt()
+    private_key, size_of_block, vector = png_parser.encrypt_with_CBC()
 
     png_parser = PngFileParser()
     img = 'after_encrypting.png'
     png_parser.readFile(img)
     png_parser.do_parsing()
-    png_parser.decrypt(private_key,size_of_block)
+    #png_parser.decrypt(private_key,size_of_block)
+    png_parser.decryptCBC(private_key, size_of_block,vector )
 
 
 
