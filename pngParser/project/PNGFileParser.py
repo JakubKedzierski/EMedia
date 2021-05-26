@@ -522,17 +522,6 @@ class PngFileParser(FileParser):
 
         return private_key,size_of_block, vector
 
-    def encrypt_with_CBC(self):
-        data = self.get_idat()
-
-        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
-        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
-        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block, initialization_vector = encrypt_data_CBC(decoded_idat)
-
-        save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale, alpha,
-                                 self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_encryptingCBC.png')
-
-        return private_key, size_of_block, initialization_vector
 
     def decryptCBC(self,private_key, size_of_block,vector ):
         data = self.get_idat()
