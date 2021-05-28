@@ -498,6 +498,45 @@ class PngFileParser(FileParser):
                 data.extend(self.__file_data[chunk[0] + 8:chunk[1] - 4])
         return data
 
+    def encrypt_compressed(self):
+        data = self.get_idat()
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
+        print( self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+        for i in range(0,len(data)):
+            data[i] = int(data[i],16)
+        size_of_compressed = len(data)
+        encrypted_data_cropped, encrypted_data_exceeded, private_key, size_of_block = encrypt_data_compressd\
+            (data,self._meta_data.width *self._meta_data.height *bytes_per_pixel)
+
+        save_png_with_png_writer(encrypted_data_cropped, encrypted_data_exceeded, greyscale, alpha,
+                                 self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+
+        return private_key, size_of_block,size_of_compressed
+
+    def decrypt_compressed(self,private_key,chunk_size,size_of_compressed):
+        data = self.get_idat()
+        bytes_per_pixel, alpha, greyscale = self.get_idat_info()
+
+        decoded_idat = decode_idat_chunk(data, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+
+        for i in range(0,len(self.after_iend )):
+            self.after_iend[i] = int(self.after_iend[i],16)
+        self.after_iend = self.after_iend[4:] # przesuniecie poza nazwe IEND
+
+        data = decoded_idat + self.after_iend
+
+        pixels = decrypt(data,private_key,chunk_size, size_of_compressed)
+
+        for i in range(0,len(pixels)):
+            pixels[i] = pixels[i].to_bytes(1, 'big').hex()
+
+        decode_idat_chunk(pixels, self._meta_data.width, self._meta_data.height, bytes_per_pixel)
+
+        #save_png_with_png_writer(pixels[0:self._meta_data.width * self._meta_data.height * bytes_per_pixel], [], greyscale, alpha,
+        #                         self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_decrypting.png')
+
+
     def encrypt(self):
 
         data = self.get_idat()

@@ -18,16 +18,18 @@ def main():
     png_encrypter.readFile(img)
     png_encrypter.do_parsing()
     #png_parser._meta_data.show_data()
-    #private_key, size_of_block = png_parser.encrypt()
-    private_key, size_of_block, vector = png_encrypter.encryptCBC()
+    private_key, size_of_block = png_encrypter.encrypt()
+    #private_key, size_of_block,size = png_encrypter.encrypt_compressed()
+    #private_key, size_of_block, vector = png_encrypter.encryptCBC()
 
 
     png_decrypter = PngFileParser()
     img = 'after_encrypting.png'
     png_decrypter.readFile(img)
     png_decrypter.do_parsing()
-    #png_parser.decrypt(private_key,size_of_block)
-    png_decrypter.decryptCBC(private_key, size_of_block,vector)
+    #png_decrypter.decrypt_compressed(private_key, size_of_block,size)
+    png_decrypter.decrypt(private_key,size_of_block)
+    #png_decrypter.decryptCBC(private_key, size_of_block,vector)
 
 
 
