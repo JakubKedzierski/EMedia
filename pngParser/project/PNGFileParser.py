@@ -534,7 +534,7 @@ class PngFileParser(FileParser):
         self.after_iend = self.after_iend[4:] # przesuniecie poza nazwe IEND
 
         data = decoded_idat + self.after_iend
-        pixels = decrypt_data_CBC(data,private_key,size_of_block,vector)
+        pixels = decrypt_data_CBC(data,private_key,size_of_block,vector,self._meta_data.width *self._meta_data.height * bytes_per_pixel)
         save_png_with_png_writer(pixels[0:self._meta_data.width * self._meta_data.height * bytes_per_pixel], [], greyscale, alpha,
                                  self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_decryptingCBC.png')
 
@@ -550,7 +550,7 @@ class PngFileParser(FileParser):
         self.after_iend = self.after_iend[4:] # przesuniecie poza nazwe IEND
 
         data = decoded_idat + self.after_iend
-        pixels = decrypt(data,private_key,chunk_size)
+        pixels = decrypt(data,private_key,chunk_size,self._meta_data.width *self._meta_data.height * bytes_per_pixel)
         save_png_with_png_writer(pixels[0:self._meta_data.width * self._meta_data.height * bytes_per_pixel], [], greyscale, alpha,
                                  self._meta_data.width, self._meta_data.height, bytes_per_pixel,'img/after_decrypting.png')
 

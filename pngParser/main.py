@@ -13,20 +13,21 @@ import random
 def main():
 
 
-    png_parser = PngFileParser()
-    img = 'tux.png'
-    png_parser.readFile(img)
-    png_parser.do_parsing()
+    png_encrypter = PngFileParser()
+    img = 'lots_of_chunks.png'
+    png_encrypter.readFile(img)
+    png_encrypter.do_parsing()
     #png_parser._meta_data.show_data()
     #private_key, size_of_block = png_parser.encrypt()
-    private_key, size_of_block, vector = png_parser.encryptCBC()
+    private_key, size_of_block, vector = png_encrypter.encryptCBC()
 
-    png_parser = PngFileParser()
+
+    png_decrypter = PngFileParser()
     img = 'after_encrypting.png'
-    png_parser.readFile(img)
-    png_parser.do_parsing()
+    png_decrypter.readFile(img)
+    png_decrypter.do_parsing()
     #png_parser.decrypt(private_key,size_of_block)
-    png_parser.decryptCBC(private_key, size_of_block,vector)
+    png_decrypter.decryptCBC(private_key, size_of_block,vector)
 
 
 
