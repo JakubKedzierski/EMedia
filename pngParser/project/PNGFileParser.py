@@ -524,7 +524,7 @@ class PngFileParser(FileParser):
 
         data = decoded_idat + self.after_iend
 
-        pixels = decrypt(data,private_key,chunk_size, size_of_compressed)
+        pixels = decrypt_compressed(data,private_key,chunk_size, size_of_compressed)
 
         for i in range(0,len(pixels)):
             pixels[i] = pixels[i].to_bytes(1, 'big').hex()
