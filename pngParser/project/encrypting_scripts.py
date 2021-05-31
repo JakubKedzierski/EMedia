@@ -6,7 +6,8 @@ from Crypto.Util import number
 import png
 import math
 import random
-
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 def generate_p_and_q(bits):
     p = 2
@@ -58,6 +59,21 @@ def encrypt_data_compressd(data, length):
 
     return pixels[:length], pixels[length:], private_key, size_of_block
 
+def encrypt_library(data):
+    keyPair = RSA.generate(1024)
+    print('n: ', keyPair.n, keyPair.e)
+    encryptor = PKCS1_OAEP.new(keyPair.public_key())
+    size_of_block = 86 #maksymalny rozmiar bloku dla tego klucza
+    data = bytearray(data)
+    pixels = []
+    for i in range(0, len(data), size_of_block):
+        bytes_to_encrypt = data[i:i+size_of_block]
+        block = encryptor.encrypt(bytes_to_encrypt)
+
+        for j in range(0, len(block)):
+            pixels.append(block[j])
+
+    return pixels[:len(data)], pixels[len(data):], (keyPair.n, keyPair.d), size_of_block
 
 def encrypt_data(data):
     n,e,d = generate_keys()
