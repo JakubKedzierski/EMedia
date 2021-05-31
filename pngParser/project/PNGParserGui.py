@@ -9,6 +9,12 @@ class PNGParserGui():
     def __init__(self):
         self.img = 'exif.png'
         self.png_parser = PngFileParser()
+        self.private_key = None
+        self.size_of_block = None
+        self.private_keyCBC = None
+        self.size_of_blockCBC = None
+        self.vector = None
+        self.size = None
 
         window = tk.Tk()
         window.title('PNG Parser')
@@ -42,7 +48,7 @@ class PNGParserGui():
         button['font'] = myFont
         button.pack(padx=20, pady=20)
 
-        frame.grid(row=4, column=1, padx=70, pady=30)
+        frame.grid(row=3, column=1, padx=70, pady=30)
         button = tk.Button(
             master = frame,
             text="Display",
@@ -50,8 +56,11 @@ class PNGParserGui():
             bg=background_button_color,
             fg=front_button_color,
         )
+
         button['font'] = myFont
         button.pack(padx=20, pady=20)
+
+        """
         frame.grid(row=5, column=1, padx=70, pady=30)
         button = tk.Button(
             master = frame,
@@ -83,8 +92,98 @@ class PNGParserGui():
         )
         button['font'] = myFont
         button.pack(padx=20, pady=20)
+        """
+
+        frame.grid(row=8, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Encode casual ECB",
+            command=lambda: self.encrypt(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Decrypt casual ECB",
+            command=lambda: self.decrypt(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Encrypt CBC",
+            command=lambda: self.encryptCBC(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Decrypt CBC",
+            command=lambda:self.decryptCBC(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Encrypt compressed",
+            command=lambda: self.encryptCompressed(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Decrypt compressed",
+            command=lambda:self.decryptCompressed(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+        frame.grid(row=9, column=1, padx=70, pady=30)
+        button = tk.Button(
+            master = frame,
+            text="Encrypt library",
+            command=lambda:self.encryptLib(),
+            bg=background_button_color,
+            fg=front_button_color,
+        )
+        button['font'] = myFont
+        button.pack(padx=20, pady=20)
+
+
 
         window.mainloop()
+
+    def encryptLib(self):
+        self.png_parser.encryptLib()
+        print("LOGGER: encrypted")
+        self.read("after_encrypting.png")
+        print("LOGGER: loaded enrypted")
 
     def read(self,text):
         self.png_parser = None
@@ -93,3 +192,46 @@ class PNGParserGui():
         self.png_parser.readFile(text)
         self.png_parser.do_parsing()
         self.name_var.set("")
+
+    def decrypt(self):
+        print("LOGGER: started decryption")
+        self.png_parser.decrypt(self.private_key, self.size_of_block)
+        print("LOGGER: decrypted")
+        self.read("after_decrypting.png")
+        print("LOGGER: loaded decrypted")
+
+    def decryptCBC(self):
+        print("LOGGER: started decryption")
+        self.png_parser.decryptCBC(self.private_keyCBC, self.size_of_blockCBC, self.vector)
+        print("LOGGER: decrypted")
+        self.read("after_decrypting.png")
+        print("LOGGER: loaded decrypted")
+
+    def encrypt(self):
+        print("LOGGER: started encryption")
+        self.private_key, self.size_of_block = self.png_parser.encrypt()
+        print("LOGGER: encrypted")
+        self.read("after_encrypting.png")
+        print("LOGGER: loaded enrypted")
+
+    def encryptCBC(self):
+        print("LOGGER: started encryption")
+        self.private_keyCBC, self.size_of_blockCBC, self.vector = self.png_parser.encryptCBC()
+        print("LOGGER: encrypted")
+        self.read("after_encrypting.png")
+        print("LOGGER: loaded enrypted")
+
+    def decryptCompressed(self):
+        print("LOGGER: started decryption")
+        self.png_parser.decrypt_compressed(self.private_key, self.size_of_block,self.size)
+        print("LOGGER: decrypted")
+        self.read("after_decrypting.png")
+        print("LOGGER: loaded decrypted")
+
+    def encryptCompressed(self):
+        print("LOGGER: started encryption")
+        self.private_key, self.size_of_block,self.size = self.png_parser.encrypt_compressed()
+        print("LOGGER: encrypted")
+        self.read("after_encrypting.png")
+        print("LOGGER: loaded enrypted")
+

@@ -1,4 +1,5 @@
 from project.PNGFileParser import PngFileParser
+from project.PNGParserGui import *
 from project.global_operations import *
 from project.encrypting_scripts import *
 import numpy as np
@@ -11,9 +12,11 @@ import random
 
 
 def main():
-
+    gui = PNGParserGui()
 
     png_encrypter = PngFileParser()
+
+    """
     img = 'lots_of_chunks.png'
     png_encrypter.readFile(img)
     png_encrypter.do_parsing()
@@ -29,7 +32,7 @@ def main():
     png_decrypter.decrypt(private_key, size_of_block)
     #png_decrypter.decrypt_compressed(private_key, size_of_block,size)
     #png_decrypter.decryptCBC(private_key, size_of_block,vector)
-
+    """
 
 
 

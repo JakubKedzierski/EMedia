@@ -61,7 +61,6 @@ def encrypt_data_compressd(data, length):
 
 def encrypt_library(data):
     keyPair = RSA.generate(1024)
-    print('n: ', keyPair.n, keyPair.e)
     encryptor = PKCS1_OAEP.new(keyPair.public_key())
     size_of_block = 86 #maksymalny rozmiar bloku dla tego klucza
     data = bytearray(data)
