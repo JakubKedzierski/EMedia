@@ -14,7 +14,6 @@ import random
 def main():
     gui = PNGParserGui()
 
-    png_encrypter = PngFileParser()
 
     """
     img = 'lots_of_chunks.png'
